@@ -1,0 +1,54 @@
+<html>
+	<head>
+		<title>StoryTeller</title>
+		<style>
+.page {	display: none;}
+		</style>
+        <script type="text/javascript"  src="debug.js"></script>
+        <script type="text/javascript"  src="types.js"></script>
+        <script type="text/javascript"  src="random.js"></script>
+        <script type="text/javascript"  src="base64.js"></script>
+        <script type="text/javascript"  src="state.js"></script>
+		<script type="text/javascript"  src="page.js"></script>
+		<script type="text/javascript"  src="core.js"></script>
+		<script type="text/javascript"> 	        
+var variables = [
+    { name : "skillPoints", value : new IntegerVariable(0, 20, 20, false) },
+    { name : "earth", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "fire", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "air", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "water", value : new IntegerVariable(0, 20, 0, false) }
+];
+		</script>
+	</head>
+	<body>
+        <div id="start" class="page">
+            <h3>StoryTeller</h3>
+			<p>This is the first page of the story.</p>
+            <p>It is defined as a &lt;div&gt; in the &lt;body&gt; of your HTML document. StoryTeller knows it is the first page to show because its id is "start". All pages must have the class "page" so that StoryTeller can identify them. All other &lt;div&gt;s will be treated and ordinary HTML</p>
+            <p>You can use standard HTML to format your pages. For example:
+                <ul>                    
+                    <li>&lt;b&gt;Bold&lt;/b&gt; = <b>Bold</b></li>
+                    <li>&lt;i&gt;Italic&lt;/i&gt; = <i>Italic</i></li>
+                    <li>&lt;u&gt;Underline&lt;/u&gt; = <u>Underline</u></li>
+                </ul>
+            </p>
+            <p>You can also use lists, tables and any other standard HTML tags.</p>
+            <p>CSS can also be used to style the pages by adding to the &lt;style&gt; element in the &lt;head&gt; of the document. Ensure that ".page {	display: none;}" remains unchanged as it will avoid the used seeing the source of your pages before StoryTeller has a chance to process them.</p>
+            <p>Alternatively, an external CSS file can be included. For example &lt;link rel="stylesheet" type="text/css" href="custom.css" /&gt; will include the file "custom.css"</p>
+            <p>[link("page2")]Click here to continue[endLink]</p>
+			<p>[link("start",{earth : earth+1})]Add Earth[endLink]</p>			
+        </div>
+        <div id="page2" class="page">
+            <h3>Links</h3>
+            <p>The player makes choices by clicking on links. These move the player to another page, just as you clicked a link on the first page to come here.</p>
+            <p>A link is defined like so: <b>[[link("</b><i>{destination id}</i><b>")]]</b><i>{link text}</i><b>[[endLink]]</b></p>
+            <p>Simply replace {destination id} with the page id to jump to and {link text} with the text you would like to appear.</p>
+            <p>For example: <b>[[link("start")]]Go back to start page[[endLink]] produces [link("start")]Go back to start page[endLink]</b></p>
+            [include("subpage")]			
+        </div>
+        <div id="subpage" class="page">
+            This is a sub-page
+        </div>
+	</body>
+</html>
