@@ -37,6 +37,9 @@ var variables = [
             <p>CSS can also be used to style the pages by adding to the &lt;style&gt; element in the &lt;head&gt; of the document. Ensure that ".page {	display: none;}" remains unchanged as it will avoid the used seeing the source of your pages before StoryTeller has a chance to process them.</p>
             <p>Alternatively, an external CSS file can be included. For example &lt;link rel="stylesheet" type="text/css" href="custom.css" /&gt; will include the file "custom.css"</p>
             <p>[link("page2")]Click here to continue[endLink]</p>
+            <p>[=earth]</p>
+            <p>[if(earth lessThan 10)]X[/if]</p>
+            <p>[if(earth greaterThan 10)]Y[/if]</p>
 			<p>[link("start",{earth : earth+1})]Add Earth[endLink]</p>			
         </div>
         <div id="page2" class="page">
