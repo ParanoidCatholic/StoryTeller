@@ -4,7 +4,7 @@ function State(values, onHashChange) {
     var _onHashChange = onHashChange;
     	
 	function fromBase64(chars) {        
-		var reader = new Base64Reader(chars);				
+		var reader = new Base64.Reader(chars);				
 		for (var i = 0; i < _values.length; i++) {
 			var value = _values[i];
 			var data = reader.readInt16Array(value.size())
@@ -13,7 +13,7 @@ function State(values, onHashChange) {
 	}
 
     this.toBase64 = function() {
-		var builder = new Base64Builder();	
+		var builder = new Base64.Builder();	
 		for (var i = 0; i < _values.length; i++) {
 			var value = _values[i];      
 			builder.addInt16Array(value.toInt16Array(), value.size());      

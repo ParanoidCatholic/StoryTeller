@@ -44,38 +44,12 @@ function StoryTeller(variables) {
     
     var _randomNumberGenerator = new RandomNumberGenerator();
     
-    var _variableIndex = {};
-    var _relationIndex = {};
     var _stateContents = [_pageId, _randomNumberGenerator];
                 
     for(var i=0; i<variables.length; i++) {
-        var variable = variables[i];
-        _stateContents.push(variable.value);
-        _variableIndex[variable.name] = variable.value;
+        _stateContents.push(variables[i].value);
     }
-    
-    var _compiler = new Compiler();
-    
-    function processPage(pageId, helper) {
-        var page = _pages.contents[pageId];
-        pageFunction = _compiler.compilePage(page);	
-		pageFunction(helper);
-    }
-    
-	function getUserVariable(name) {
-		return _variableIndex[name].get();
-	}
-	
-	function setUserVariable(name, value) {
-		_variableIndex[name].set(value);
-        return _variableIndex[name].get();
-	}
-                
-    function includePage(pageName, helper) {
-        var pageId = _pages.index[pageName];
-        processPage(pageId, helper);
-    }
-    
+       
     function linkUrl(pageName, overrides) {
         if(!(pageName in _pages.index)) {
             throw new Error("Page not found: " + pageId);
@@ -95,28 +69,20 @@ function StoryTeller(variables) {
         }
         return "#" + hash;
     }
+       
+    var functions = [
+        {name: "randomInteger", operation: _randomNumberGenerator.getInteger.bind(_randomNumberGenerator)},
+        {name: "randomNumber", operation: _randomNumberGenerator.getNumber.bind(_randomNumberGenerator)},
+        {name: "randomBoolean", operation: _randomNumberGenerator.getBoolean.bind(_randomNumberGenerator)}
+    ]
         
-	function PageHelper() {
-	
-		var _value = "";
-        var _rng = _randomNumberGenerator;
-        
-		this.get = getUserVariable;
-		this.set = setUserVariable;
-		this.link = linkUrl;
-        this.include = includePage;
-		this.randomBoolean = function(probability){return _rng.getBoolean(probability);}
-		this.randomInteger = function(min,max){return _rng.getInteger(min,max);}
-		this.randomNumber = function(min,max){return _rng.getNumber(min,max);}
-		this.append = function(text) {_value += text;}
-				
-		this.getValue = function() {return _value;}
-	}
-	        
+    var _compiler = new Compiler(variables, functions);
+    	        
     function showPage() {        
-		var helper = new PageHelper();
-        processPage(_pageId.get(), helper);		        
-        _root.innerHTML = helper.getValue();
+        var compiled = _compiler.compile(_pages.contents[_pageId.get()]);	
+        var outputBuilder = new StringBuilder();
+        compiled.execute(outputBuilder);
+        _root.innerHTML = outputBuilder.getValue();
     }
     
     var _state = new State(_stateContents, showPage);
