@@ -68,7 +68,7 @@ function Compiler(variables, functions) {
         }
     }
 
-    function literalExpression(value) {
+    function literalExpression(value) {	
         return {
             evaluate: function() {
                 return visible(value);
@@ -209,14 +209,7 @@ function Compiler(variables, functions) {
     symbols[ContextMode.func] = {
         "(" : leftBracket
     };
-    
-    var funcs = {};
-    
-    for(var i=0; i<functions.length; i++) {
-        var funcDef = functions[i];
-        funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
-    }
-
+        
     var globals = {};
 
     for(var i=0; i<variables.length; i++) {
@@ -224,6 +217,13 @@ function Compiler(variables, functions) {
         globals[variable.name] = {tokenType: TokenType.variable, value: variable.value, toString: function(){return variable.name}};
     }
 
+	var funcs = {};
+    
+    for(var i=0; i<functions.length; i++) {
+        var funcDef = functions[i];
+        funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+    }
+		
     function RpnExpressionBuilder() {
         var _stack = [];
         
@@ -373,7 +373,8 @@ function Compiler(variables, functions) {
         }
         
         this.execute = function(outputBuilder) {   
-            for(var i=0;i<_lines.length;i++) {   
+            for(var i=0;i<_lines.length;i++) {  
+				console.log(_lines[i]);
                 _lines[i].execute(outputBuilder);
             }
         }
@@ -411,6 +412,20 @@ function Compiler(variables, functions) {
             }
         }
     }
+	
+	function DecoratedBlock(decorator) {
+		var _block = new CodeBlock();
+		        
+        this.addLine = function(line) {
+            _block.addLine(line);
+        }
+        
+        this.execute = function(outputBuilder) {   
+			outputBuilder.add(decorator.before());
+            _block.execute(outputBuilder);
+			decorator.after(outputBuilder);
+        }
+	}
 
     this.compile = function(code) {
         
@@ -447,7 +462,7 @@ function Compiler(variables, functions) {
                     return {tokenType: TokenType.literal, value: Number(tokenString), toString: function() {return tokenString}};
                 }
                 if(stringRegex.test(tokenString)) {
-                    return {tokenType: TokenType.literal, value: tokenString};
+                    return {tokenType: TokenType.literal, value: tokenString.substring(1,tokenString.length-1)};
                 }
             }
 

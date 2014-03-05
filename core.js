@@ -39,7 +39,12 @@ function StoryTeller(variables) {
     if(_pages.index["start"]) {
         _startPage = pages.index["start"];
     }
+	
+	console.log(_pages.contents);
     
+	console.log(_pages.index);
+	console.log(_pages.index["start"]);
+	
     var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
     
     var _randomNumberGenerator = new RandomNumberGenerator();
@@ -50,31 +55,25 @@ function StoryTeller(variables) {
         _stateContents.push(variables[i].value);
     }
        
-    function linkUrl(pageName, overrides) {
+    function linkUrl(pageName) {
+		
         if(!(pageName in _pages.index)) {
-            throw new Error("Page not found: " + pageId);
+            throw new Error("Page not found: " + pageName);
         }
         
         var pageIdBackup = _pageId.get();
         _pageId.set(_pages.index[pageName]);
-        var variableBackup = {};
-        for(key in overrides) {
-            variableBackup[key] = getUserVariable(key);
-            setUserVariable(key, overrides[key]);
-        }
         var hash = _state.toBase64();
         _pageId.set(pageIdBackup);
-        for(key in variableBackup) {			
-            setUserVariable(key, variableBackup[key]);
-        }
         return "#" + hash;
     }
        
     var functions = [
         {name: "randomInteger", operation: _randomNumberGenerator.getInteger.bind(_randomNumberGenerator)},
         {name: "randomNumber", operation: _randomNumberGenerator.getNumber.bind(_randomNumberGenerator)},
-        {name: "randomBoolean", operation: _randomNumberGenerator.getBoolean.bind(_randomNumberGenerator)}
-    ]
+        {name: "randomBoolean", operation: _randomNumberGenerator.getBoolean.bind(_randomNumberGenerator)},
+		{name: "linkUrl", operation: linkUrl}
+    ];
         
     var _compiler = new Compiler(variables, functions);
     	        
