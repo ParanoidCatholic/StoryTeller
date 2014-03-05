@@ -39,12 +39,7 @@ function StoryTeller(variables) {
     if(_pages.index["start"]) {
         _startPage = pages.index["start"];
     }
-	
-	console.log(_pages.contents);
-    
-	console.log(_pages.index);
-	console.log(_pages.index["start"]);
-	
+		
     var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
     
     var _randomNumberGenerator = new RandomNumberGenerator();
@@ -67,12 +62,16 @@ function StoryTeller(variables) {
         _pageId.set(pageIdBackup);
         return "#" + hash;
     }
+    
+    function makeLink(outputBuilder, block, pageName) {
+        
+    }
        
     var functions = [
         {name: "randomInteger", operation: _randomNumberGenerator.getInteger.bind(_randomNumberGenerator)},
         {name: "randomNumber", operation: _randomNumberGenerator.getNumber.bind(_randomNumberGenerator)},
         {name: "randomBoolean", operation: _randomNumberGenerator.getBoolean.bind(_randomNumberGenerator)},
-		{name: "linkUrl", operation: linkUrl}
+		{name: "link", operation: linkUrl}
     ];
         
     var _compiler = new Compiler(variables, functions);

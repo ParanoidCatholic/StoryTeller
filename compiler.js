@@ -339,10 +339,10 @@ function Compiler(variables, functions) {
 
     var lineRegex = /((\[\[)|([^[]))+|(\[[^\]]*\])/g;
     var statementRegex = /^\[[^\[]/;
-    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$?[_a-zA-Z][_a-zA-Z0-9]*)|("([^"]|\\")*")/g;
+    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$[_a-zA-Z0-9]+)|([_a-zA-Z][_a-zA-Z0-9]*)|("([^"]|\\")*")/g;
 
-    var identifierRegex = /^[_a-zA-Z][_a-zA-Z]*$/;
-    var localRegex = /^\$[_a-zA-Z][_a-zA-Z]*$/;
+    var identifierRegex = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
+    var localRegex = /^\$[_a-zA-Z0-9]+$/;
     var numberRegex = /^([0-9]*\.[0-9])|([0-9]+)$/;
     var stringRegex = /^"([^"]|\\")*"$/;
 
@@ -373,8 +373,7 @@ function Compiler(variables, functions) {
         }
         
         this.execute = function(outputBuilder) {   
-            for(var i=0;i<_lines.length;i++) {  
-				console.log(_lines[i]);
+            for(var i=0;i<_lines.length;i++) {  				
                 _lines[i].execute(outputBuilder);
             }
         }
@@ -526,7 +525,6 @@ function Compiler(variables, functions) {
                 
         for(var i=0; i<lines.length; i++) {
             var line = lines[i];
-            
             if(statementRegex.test(line)) {
                 addStatement(line.substring(1, line.length-1));            
             } else {
