@@ -40,14 +40,16 @@ var variables = [
                 <li>[randomInteger(0,100)]</li>      
                 <li>[randomNumber(0,1)]</li> 
                 <li>[randomBoolean(0.5)]</li>  
-				[$start="start"][$page2="page2"]
-				<li><a href="[linkUrl($start)]">Do Nothing</a></li>		
-                <li><a href="[linkUrl($page2)]">NEXT</a></li>	  	                
+				[include("page23")]  
+				[link("page2")]test link[end]                
             </ul>
             <h1>Le end</h1>	
         </div>
 		<div id="page2" class="page">
 			<h1>PAGE 2</h1>
+		</div>
+		<div id="page23" class="page">
+			<h1>PAGE 23</h1>
 		</div>
 	</body>
 </html>

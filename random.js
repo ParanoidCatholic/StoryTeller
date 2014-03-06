@@ -50,3 +50,5 @@ function RandomNumberGenerator() {
 		_seed.fromInt16Array(ints); 
 	}
 }
+
+var random = new RandomNumberGenerator();

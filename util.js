@@ -1,13 +1,13 @@
 function StringBuilder() {
     
-    var _value = "";
+    var _values = [];
     
     this.append = function (value) {
-        _value += value;
+        _values.push(value);
     }
     
     this.getValue = function() {
-        return _value;
+        return _values.join("");
     }
 }
 

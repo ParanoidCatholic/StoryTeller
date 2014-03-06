@@ -1,5 +1,5 @@
 function StoryTeller(variables) {
-	    
+	   
     var _root = document.body;
     
     var _pages = function() {
@@ -41,10 +41,8 @@ function StoryTeller(variables) {
     }
 		
     var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
-    
-    var _randomNumberGenerator = new RandomNumberGenerator();
-    
-    var _stateContents = [_pageId, _randomNumberGenerator];
+        
+    var _stateContents = [_pageId, random];
                 
     for(var i=0; i<variables.length; i++) {
         _stateContents.push(variables[i].value);
@@ -63,17 +61,35 @@ function StoryTeller(variables) {
         return "#" + hash;
     }
     
-    function makeLink(outputBuilder, block, pageName) {
-        
+    function makeLink(body, pageName) {
+		var resultBuilder = new StringBuilder();
+		resultBuilder.append('<a href=\"');
+		resultBuilder.append(linkUrl(pageName));
+		resultBuilder.append('">');
+		resultBuilder.append(body);
+		resultBuilder.append('</a>');
+		return resultBuilder.getValue();
     }
+	
+	function includePage(pageName) {
+		if(!(pageName in _pages.index)) {
+            throw new Error("Page not found: " + pageName);
+        }
+		var pageId = _pages.index[pageName];
+		var compiled = _compiler.compile(_pages.contents[pageId]);	
+		var subPageBuilder = new StringBuilder();
+        compiled.execute(subPageBuilder);
+		return subPageBuilder.getValue();
+	}
        
     var functions = [
-        {name: "randomInteger", operation: _randomNumberGenerator.getInteger.bind(_randomNumberGenerator)},
-        {name: "randomNumber", operation: _randomNumberGenerator.getNumber.bind(_randomNumberGenerator)},
-        {name: "randomBoolean", operation: _randomNumberGenerator.getBoolean.bind(_randomNumberGenerator)},
-		{name: "link", operation: linkUrl}
+        {name: "randomInteger", operation: random.getInteger.bind(random)},
+        {name: "randomNumber", operation: random.getNumber.bind(random)},
+        {name: "randomBoolean", operation: random.getBoolean.bind(random)},
+		{name: "include", operation: includePage},
+		{name: "link", operation: makeLink, blockFunction: true}
     ];
-        
+	        
     var _compiler = new Compiler(variables, functions);
     	        
     function showPage() {        

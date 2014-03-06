@@ -18,11 +18,12 @@ function Compiler(variables, functions) {
         rightBracket: 2,
         separator: 3,
         func: 4, 
-        operator: 5,
-        unaryOperator: 6,
-        variable: 7,
-        literal: 8,
-        marker: 9
+		blockFunc: 5,
+        operator: 6,
+        unaryOperator: 7,
+        variable: 8,
+        literal: 9,
+        marker: 10
     };
 
     var ContextMode = {
@@ -50,6 +51,74 @@ function Compiler(variables, functions) {
     tokenTypeMode[TokenType.variable] = ContextMode.complete;
     tokenTypeMode[TokenType.literal] = ContextMode.complete;
 
+	function CodeBlock() {
+        var _lines = [];
+        
+        this.addLine = function(line) {
+            _lines.push(line);
+        }
+        
+        this.execute = function(outputBuilder) {   
+            for(var i=0;i<_lines.length;i++) {  				
+                _lines[i].execute(outputBuilder);
+            }
+        }
+    }
+
+    function IfBlock(condition) {
+        var _blocks = [];
+        var _activeBlock;
+        
+        function _addCondition(condition) {        
+            _activeBlock = {condition: condition, block: new CodeBlock()};
+            _blocks.push(_activeBlock);
+        }
+        
+        _addCondition(condition);
+        
+        this.addCondition = function(condition) {        
+            if(_activeBlock.condition == null) {
+                throw "Unreachable 'else' clause";
+            }
+            _addCondition(condition);
+        }
+        
+        this.addLine = function(line) {
+            _activeBlock.block.addLine(line);
+        }
+                        
+        this.execute = function(outputBuilder) {
+            for(var i=0;i<_blocks.length;i++) {
+                var block = _blocks[i];
+                if(block.condition == null || block.condition.evaluate().value) {
+                    block.block.execute(outputBuilder);
+                    return;
+                }
+            }
+        }
+    }
+	
+	function FunctionBlock(func, parameters) {
+		var _block = new CodeBlock();
+		
+		var _evaluatedParameters = [];
+		
+        for(var i=0;i<parameters.length;i++) {
+            _evaluatedParameters.push(parameters[i].evaluate().value)
+        }
+		
+        this.addLine = function(line) {
+            _block.addLine(line);
+        }
+        
+        this.execute = function(outputBuilder) {
+			var bodyBuilder = new StringBuilder();
+			_block.execute(bodyBuilder);
+			_evaluatedParameters.push(bodyBuilder.getValue());
+			outputBuilder.append(func.apply(null, _evaluatedParameters.reverse()));
+        }
+	}
+	
     function invalidAssignment(value) {
         throw "Expression cannot be assigned to";
     }
@@ -168,6 +237,16 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
+	
+	function blockFunctionExpression(func,parameters) {
+        return {
+			block: new FunctionBlock(func, parameters),
+            evaluate: function() {
+                throw "Block functions cannot be evaluated in a statement.";                       
+            },
+            assign: invalidAssignment
+        };
+    }
 
     var marker = {tokenType: TokenType.marker, toString: function() {return "()";}};
 
@@ -221,13 +300,19 @@ function Compiler(variables, functions) {
     
     for(var i=0; i<functions.length; i++) {
         var funcDef = functions[i];
-        funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+		if(funcDef.blockFunction) {
+			funcs[funcDef.name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+		} else {
+			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+		}
     }
+	
 		
     function RpnExpressionBuilder() {
         var _stack = [];
         
         this.addToken = function(token) {
+			console.log(token);
             switch(token.tokenType) {  
                 case TokenType.operator:
                     var rightOperand = _stack.pop();
@@ -246,6 +331,14 @@ function Compiler(variables, functions) {
                     }
                     _stack.push(functionExpression(token.operation,parameters.reverse()));                
                     break;
+				case TokenType.blockFunc:
+                    var parameters = [];
+                    var parameter;
+                    while((parameter=_stack.pop())) {
+                        parameters.push(parameter);
+                    }
+                    _stack.push(blockFunctionExpression(token.operation,parameters));                
+                    break;
                 case TokenType.literal:
                     _stack.push(literalExpression(token.value));
                     break;
@@ -255,6 +348,7 @@ function Compiler(variables, functions) {
                 case TokenType.marker:
                     _stack.push(null);
             }
+			console.log(_stack);
         }
         
         this.getExpression = function() {
@@ -301,7 +395,7 @@ function Compiler(variables, functions) {
                         _builder.addToken(_stack.pop());
                     }
                     _stack.pop();
-                    if(topTokenTypeIs([TokenType.func, TokenType.flowControl])) {
+                    if(topTokenTypeIs([TokenType.func, TokenType.blockFunc])) {
                         _builder.addToken(_stack.pop());
                     }
                     break;
@@ -320,6 +414,7 @@ function Compiler(variables, functions) {
                     _stack.push(token);
                     break;
                 case TokenType.func:
+				case TokenType.blockFunc:
                     _stack.push(token);
                     _builder.addToken(marker);
                     break;
@@ -364,68 +459,7 @@ function Compiler(variables, functions) {
             }
         };
     }
-
-    function CodeBlock() {
-        var _lines = [];
-        
-        this.addLine = function(line) {
-            _lines.push(line);
-        }
-        
-        this.execute = function(outputBuilder) {   
-            for(var i=0;i<_lines.length;i++) {  				
-                _lines[i].execute(outputBuilder);
-            }
-        }
-    }
-
-    function IfBlock(condition) {
-        var _blocks = [];
-        var _activeBlock;
-        
-        function _addCondition(condition) {        
-            _activeBlock = {condition: condition, block: new CodeBlock()};
-            _blocks.push(_activeBlock);
-        }
-        
-        _addCondition(condition);
-        
-        this.addCondition = function(condition) {        
-            if(_activeBlock.condition == null) {
-                throw "Unreachable 'else' clause";
-            }
-            _addCondition(condition);
-        }
-        
-        this.addLine = function(line) {
-            _activeBlock.block.addLine(line);
-        }
-                        
-        this.execute = function(outputBuilder) {
-            for(var i=0;i<_blocks.length;i++) {
-                var block = _blocks[i];
-                if(block.condition == null || block.condition.evaluate().value) {
-                    block.block.execute(outputBuilder);
-                    return;
-                }
-            }
-        }
-    }
-	
-	function DecoratedBlock(decorator) {
-		var _block = new CodeBlock();
-		        
-        this.addLine = function(line) {
-            _block.addLine(line);
-        }
-        
-        this.execute = function(outputBuilder) {   
-			outputBuilder.add(decorator.before());
-            _block.execute(outputBuilder);
-			decorator.after(outputBuilder);
-        }
-	}
-
+    
     this.compile = function(code) {
         
         var rootBlock = new CodeBlock();
@@ -487,9 +521,11 @@ function Compiler(variables, functions) {
         }
          
         function addStatement(statement) {
+			console.log(statement);
             var tokenStrings = statement.match(tokenRegex);
             
-            switch(tokenStrings[0]) {
+			var firstToken = tokenStrings[0];
+            switch(firstToken) {
                 case "if":
                     var ifBlock = new IfBlock(generateExpression(tokenStrings,1));
                     currentBlock.addLine(ifBlock);
@@ -517,7 +553,14 @@ function Compiler(variables, functions) {
                     currentBlock = blockStack.pop();
                     break;
                 default:
-                    currentBlock.addLine(expressionLine(generateExpression(tokenStrings,0)));
+					var expression = generateExpression(tokenStrings,0);
+					if(expression.block) {
+						currentBlock.addLine(expression.block);
+						blockStack.push(currentBlock);
+						currentBlock = expression.block;
+					} else {
+						currentBlock.addLine(expressionLine(generateExpression(tokenStrings,0)));  
+					}					                  
             }               
         }
         
