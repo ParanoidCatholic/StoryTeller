@@ -61,13 +61,27 @@ function StoryTeller(variables) {
         return "#" + hash;
     }
     
-    function makeLink(body, pageName) {
+    function makeLink(block, pageName) {
+        if(!(pageName in _pages.index)) {
+            throw new Error("Page not found: " + pageName);
+        }
+    
+        var backup = _state.toBase64();
+        
+        _pageId.set(_pages.index[pageName]);
+        
+        var bodyBuilder = new StringBuilder();
+        block.execute(bodyBuilder);
+                
 		var resultBuilder = new StringBuilder();
-		resultBuilder.append('<a href=\"');
-		resultBuilder.append(linkUrl(pageName));
+		resultBuilder.append('<a href=\"#');
+		resultBuilder.append(_state.toBase64());
 		resultBuilder.append('">');
-		resultBuilder.append(body);
+		resultBuilder.append(bodyBuilder.getValue());
 		resultBuilder.append('</a>');
+        
+        _state.fromBase64(backup);
+        
 		return resultBuilder.getValue();
     }
 	

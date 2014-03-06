@@ -16,14 +16,14 @@ function Compiler(variables, functions) {
     var TokenType = {
         leftBracket: 1,
         rightBracket: 2,
-        separator: 3,
-        func: 4, 
-		blockFunc: 5,
-        operator: 6,
-        unaryOperator: 7,
-        variable: 8,
-        literal: 9,
-        marker: 10
+        separator: 5,
+        func: 6, 
+		blockFunc: 7,
+        operator: 8,
+        unaryOperator: 9,
+        variable: 10,
+        literal: 11,
+        marker: 12
     };
 
     var ContextMode = {
@@ -101,21 +101,18 @@ function Compiler(variables, functions) {
 	function FunctionBlock(func, parameters) {
 		var _block = new CodeBlock();
 		
-		var _evaluatedParameters = [];
+		var _evaluatedParameters = [_block];
 		
         for(var i=0;i<parameters.length;i++) {
             _evaluatedParameters.push(parameters[i].evaluate().value)
         }
-		
+        		
         this.addLine = function(line) {
             _block.addLine(line);
         }
         
         this.execute = function(outputBuilder) {
-			var bodyBuilder = new StringBuilder();
-			_block.execute(bodyBuilder);
-			_evaluatedParameters.push(bodyBuilder.getValue());
-			outputBuilder.append(func.apply(null, _evaluatedParameters.reverse()));
+			outputBuilder.append(func.apply(null, _evaluatedParameters));
         }
 	}
 	
@@ -168,7 +165,7 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
-
+    
     function equalExpression(leftOperand,rightOperand) {
         return {
             evaluate: function() {return visible(leftOperand.evaluate().value==rightOperand.evaluate().value);},        
@@ -306,8 +303,7 @@ function Compiler(variables, functions) {
 			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
 		}
     }
-	
-		
+			
     function RpnExpressionBuilder() {
         var _stack = [];
         
@@ -337,7 +333,7 @@ function Compiler(variables, functions) {
                     while((parameter=_stack.pop())) {
                         parameters.push(parameter);
                     }
-                    _stack.push(blockFunctionExpression(token.operation,parameters));                
+                    _stack.push(blockFunctionExpression(token.operation,parameters.reverse()));                
                     break;
                 case TokenType.literal:
                     _stack.push(literalExpression(token.value));

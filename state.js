@@ -21,6 +21,8 @@ function State(values, onHashChange) {
 		return builder.chars();
 	}
     
+    this.fromBase64 = fromBase64;
+        
     function getHash() {
         return window.location.hash.replace(/^#/,'');
     }
@@ -40,7 +42,7 @@ function State(values, onHashChange) {
 			fromBase64(_hash);
             _onHashChange();
 		}
-	}   
-            
+	} 
+                
 	var _intervalId = window.setInterval(checkHash, 100);
 };
