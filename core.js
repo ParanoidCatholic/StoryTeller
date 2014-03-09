@@ -18,10 +18,10 @@ function StoryTeller(variables) {
 			if(element.className == "page") {	
 			
 				if(pages.index[element.id]) {
-					throw new Error("Duplicate page ID: " + element.id);
+					throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
 				}
 							
-				pages.contents[pageNumber] = element.innerHTML;
+				pages.contents[pageNumber] = {name: element.id, body: element.innerHTML};
 				pages.index[element.id] = pageNumber;
 				pageNumber++;
 			}		
@@ -47,27 +47,17 @@ function StoryTeller(variables) {
     for(var i=0; i<variables.length; i++) {
         _stateContents.push(variables[i].value);
     }
-       
-    function linkUrl(pageName) {
-		
-        if(!(pageName in _pages.index)) {
-            throw new Error("Page not found: " + pageName);
-        }
         
-        var pageIdBackup = _pageId.get();
-        _pageId.set(_pages.index[pageName]);
-        var hash = _state.toBase64();
-        _pageId.set(pageIdBackup);
-        return "#" + hash;
-    }
-    
-    function makeLink(block, pageName) {
+    function makeLink(block, pageNameExpression) {
+        
+        var pageName = pageNameExpression.evaluate();
+                
         if(!(pageName in _pages.index)) {
-            throw new Error("Page not found: " + pageName);
+            throw new Error(stringFormat("Page not found: {0}", [pageName]));
         }
     
         var backup = _state.toBase64();
-        
+                
         _pageId.set(_pages.index[pageName]);
         
         var bodyBuilder = new StringBuilder();
@@ -84,16 +74,21 @@ function StoryTeller(variables) {
         
 		return resultBuilder.getValue();
     }
-	
+    	
 	function includePage(pageName) {
 		if(!(pageName in _pages.index)) {
-            throw new Error("Page not found: " + pageName);
+            throw new Error(stringFormat("Page not found: {0}", [pageName]));
         }
 		var pageId = _pages.index[pageName];
-		var compiled = _compiler.compile(_pages.contents[pageId]);	
-		var subPageBuilder = new StringBuilder();
-        compiled.execute(subPageBuilder);
-		return subPageBuilder.getValue();
+        
+        try {
+            var compiled = _compiler.compile(_pages.contents[pageId].body);	
+            var subPageBuilder = new StringBuilder();
+            compiled.execute(subPageBuilder);
+            return subPageBuilder.getValue();
+        } catch (error) {
+            throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageName, error.message]));
+        }
 	}
        
     var functions = [
@@ -107,10 +102,16 @@ function StoryTeller(variables) {
     var _compiler = new Compiler(variables, functions);
     	        
     function showPage() {        
-        var compiled = _compiler.compile(_pages.contents[_pageId.get()]);	
+        var compiled = _compiler.compile(_pages.contents[_pageId.get()].body);	
         var outputBuilder = new StringBuilder();
-        compiled.execute(outputBuilder);
-        _root.innerHTML = outputBuilder.getValue();
+        
+        try {
+            compiled.execute(outputBuilder);
+            _root.innerHTML = outputBuilder.getValue();
+        } catch (error) {
+            console.log(stringFormat("Error in page '{0}'\n{1}",[_pages.contents[_pageId.get()].name,error.message]));
+            _root.innerHTML = "An error has occurred."
+        }
     }
     
     var _state = new State(_stateContents, showPage);

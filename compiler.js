@@ -35,8 +35,7 @@ function Compiler(variables, functions) {
     function literalToken(value) {
         return {
             tokenType: TokenType.literal,
-            value: value,
-            toString: function() {return value;}
+            value: value
         }
     }
 
@@ -59,8 +58,15 @@ function Compiler(variables, functions) {
         }
         
         this.execute = function(outputBuilder) {   
-            for(var i=0;i<_lines.length;i++) {  				
-                _lines[i].execute(outputBuilder);
+            for(var i=0;i<_lines.length;i++) {  
+                var line = _lines[i];
+                try{
+                    line.execute(outputBuilder);
+                } catch(error) {
+                    if(line.source) {
+                        throw new Error(stringFormat("Unable to execute statement '{0}':\n{1}", [line.source, error.message]));
+                    }
+                } 
             }
         }
     }
@@ -78,7 +84,7 @@ function Compiler(variables, functions) {
         
         this.addCondition = function(condition) {        
             if(_activeBlock.condition == null) {
-                throw "Unreachable 'else' clause";
+                throw new Error("Unreachable 'else' clause");
             }
             _addCondition(condition);
         }
@@ -97,14 +103,18 @@ function Compiler(variables, functions) {
             }
         }
     }
-	
+	        
 	function FunctionBlock(func, parameters) {
 		var _block = new CodeBlock();
 		
-		var _evaluatedParameters = [_block];
+		var _parameters = [_block];
 		
         for(var i=0;i<parameters.length;i++) {
-            _evaluatedParameters.push(parameters[i].evaluate().value)
+            var parameter = parameters[i];
+            _parameters.push({
+                evaluate: function(){return parameter.evaluate().value;},
+                assign: parameter.assign.bind(parameter)
+            });
         }
         		
         this.addLine = function(line) {
@@ -112,12 +122,12 @@ function Compiler(variables, functions) {
         }
         
         this.execute = function(outputBuilder) {
-			outputBuilder.append(func.apply(null, _evaluatedParameters));
+			outputBuilder.append(func.apply(null, _parameters));
         }
 	}
 	
     function invalidAssignment(value) {
-        throw "Expression cannot be assigned to";
+        throw new Error("Expression cannot be assigned to");
     }
 
     function visible(value) {
@@ -141,7 +151,7 @@ function Compiler(variables, functions) {
             },
             
             assign: function(value) {
-                throw "Attempt to assign to literal";
+                throw new Error("Attempt to assign to literal");
             }
         };
     }
@@ -239,26 +249,26 @@ function Compiler(variables, functions) {
         return {
 			block: new FunctionBlock(func, parameters),
             evaluate: function() {
-                throw "Block functions cannot be evaluated in a statement.";                       
+                throw new Error("Block functions cannot be evaluated in a statement.");                       
             },
             assign: invalidAssignment
         };
     }
 
-    var marker = {tokenType: TokenType.marker, toString: function() {return "()";}};
+    var marker = {tokenType: TokenType.marker};
 
-    var leftBracket = {tokenType: TokenType.leftBracket, toString: function() {return "("}};
-    var rightBracket = {tokenType: TokenType.rightBracket, toString: function() {return ")"}};
-    var separator = {tokenType: TokenType.separator, toString: function() {return ","}};
-    var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression, toString: function() {return "="}};
-    var equalOperator = {tokenType: TokenType.operator, precedence: 1, expression: equalExpression, operation: function(leftOperand,rightOperand) {return literalToken(leftOperand.get()==rightOperand.get());}, toString: function() {return "=="}};
-    var additionOperator = {tokenType: TokenType.operator, precedence: 2, expression: additionExpression, toString: function() {return "+"}};
-    var subtractionOperator = {tokenType: TokenType.operator, precedence: 2, expression: subtractionExpression, toString: function() {return "-"}};
-    var multiplicationOperator = {tokenType: TokenType.operator, precedence: 3, expression: multiplicationExpression, toString: function() {return "*"}};
-    var divisionOperator = {tokenType: TokenType.operator, precedence: 3, expression: divisionExpression, toString: function() {return "/"}};
-    var modulusOperator = {tokenType: TokenType.operator, precedence: 3, expression: modulusExpression, toString: function() {return "%"}};
-    var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression, toString: function() {return "!"}};
-    var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression, toString: function() {return "negative"}};
+    var leftBracket = {tokenType: TokenType.leftBracket};
+    var rightBracket = {tokenType: TokenType.rightBracket};
+    var separator = {tokenType: TokenType.separator};
+    var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression};
+    var equalOperator = {tokenType: TokenType.operator, precedence: 1, expression: equalExpression};
+    var additionOperator = {tokenType: TokenType.operator, precedence: 2, expression: additionExpression};
+    var subtractionOperator = {tokenType: TokenType.operator, precedence: 2, expression: subtractionExpression};
+    var multiplicationOperator = {tokenType: TokenType.operator, precedence: 3, expression: multiplicationExpression};
+    var divisionOperator = {tokenType: TokenType.operator, precedence: 3, expression: divisionExpression};
+    var modulusOperator = {tokenType: TokenType.operator, precedence: 3, expression: modulusExpression};
+    var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression};
+    var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression};
 
     var symbols = [];
 
@@ -290,7 +300,7 @@ function Compiler(variables, functions) {
 
     for(var i=0; i<variables.length; i++) {
         var variable = variables[i];
-        globals[variable.name] = {tokenType: TokenType.variable, value: variable.value, toString: function(){return variable.name}};
+        globals[variable.name] = {tokenType: TokenType.variable, value: variable.value};
     }
 
 	var funcs = {};
@@ -298,9 +308,9 @@ function Compiler(variables, functions) {
     for(var i=0; i<functions.length; i++) {
         var funcDef = functions[i];
 		if(funcDef.blockFunction) {
-			funcs[funcDef.name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+			funcs[funcDef.name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation}
 		} else {
-			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation, toString: function() {return funcDef.name;}}
+			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation}
 		}
     }
 			
@@ -308,7 +318,6 @@ function Compiler(variables, functions) {
         var _stack = [];
         
         this.addToken = function(token) {
-			console.log(token);
             switch(token.tokenType) {  
                 case TokenType.operator:
                     var rightOperand = _stack.pop();
@@ -333,7 +342,7 @@ function Compiler(variables, functions) {
                     while((parameter=_stack.pop())) {
                         parameters.push(parameter);
                     }
-                    _stack.push(blockFunctionExpression(token.operation,parameters.reverse()));                
+                    _stack.push(blockFunctionExpression(token.operation,parameters.reverse()));
                     break;
                 case TokenType.literal:
                     _stack.push(literalExpression(token.value));
@@ -344,15 +353,14 @@ function Compiler(variables, functions) {
                 case TokenType.marker:
                     _stack.push(null);
             }
-			console.log(_stack);
         }
         
         this.getExpression = function() {
             if(_stack.length==0) {
-                throw "Empty expression";
+                throw new Error("Empty expression");
             }
             if(_stack.length>1) {
-                throw "Incomplete expression";
+                throw new Error("Incomplete expression");
             }
             return _stack.pop();
         }
@@ -445,14 +453,15 @@ function Compiler(variables, functions) {
         };
     }
 
-    function expressionLine(expression) {
+    function expressionLine(expression, source) {
         return {
             execute: function(outputBuilder) {
                 var result = expression.evaluate();
                 if(result.output) {
                     outputBuilder.append(result.value);
                 }
-            }
+            },
+            source: source
         };
     }
     
@@ -482,20 +491,20 @@ function Compiler(variables, functions) {
                 
                 if(localRegex.test(tokenString)) {
                     if(!locals[tokenString]) {
-                        locals[tokenString] = {tokenType: TokenType.variable, value : new LocalVariable(), toString: function(){return tokenString}};    
+                        locals[tokenString] = {tokenType: TokenType.variable, value : new LocalVariable()};    
                     }
                     return locals[tokenString];  
                 }
                 
                 if(numberRegex.test(tokenString)) {
-                    return {tokenType: TokenType.literal, value: Number(tokenString), toString: function() {return tokenString}};
+                    return {tokenType: TokenType.literal, value: Number(tokenString)};
                 }
                 if(stringRegex.test(tokenString)) {
                     return {tokenType: TokenType.literal, value: tokenString.substring(1,tokenString.length-1)};
                 }
             }
 
-            throw stringFormat("Unexpected token '{0}'", [tokenString]);    
+            throw new Error(stringFormat("Unexpected token '{0}'", [tokenString]));    
         }
         
         function generateExpression(tokenStrings, start) {
@@ -510,54 +519,57 @@ function Compiler(variables, functions) {
             }
                     
             if(mode!=ContextMode.complete) {
-                throw "Unexpected end of statement";
+                throw new Error("Unexpected end of statement");
             }
              
             return builder.getExpression();
         }
          
         function addStatement(statement) {
-			console.log(statement);
-            var tokenStrings = statement.match(tokenRegex);
-            
-			var firstToken = tokenStrings[0];
-            switch(firstToken) {
-                case "if":
-                    var ifBlock = new IfBlock(generateExpression(tokenStrings,1));
-                    currentBlock.addLine(ifBlock);
-                    blockStack.push(currentBlock);
-                    currentBlock = ifBlock;
-                    break;
-                case "else":
-                    if(currentBlock.addCondition) {
-                        if(tokenStrings[1]=="if") {
-                            currentBlock.addCondition(generateExpression(tokenStrings,2));
+            try{
+                var tokenStrings = statement.match(tokenRegex);
+                
+                var firstToken = tokenStrings[0];
+                switch(firstToken) {
+                    case "if":
+                        var ifBlock = new IfBlock(generateExpression(tokenStrings,1));
+                        currentBlock.addLine(ifBlock);
+                        blockStack.push(currentBlock);
+                        currentBlock = ifBlock;
+                        break;
+                    case "else":
+                        if(currentBlock.addCondition) {
+                            if(tokenStrings[1]=="if") {
+                                currentBlock.addCondition(generateExpression(tokenStrings,2));
+                            } else {
+                                currentBlock.addCondition(null);
+                            }
                         } else {
-                            currentBlock.addCondition(null);
+                            throw new Error("Unexpected statement");
                         }
-                    } else {
-                        throw "Unexpected statement";
-                    }
-                    break;
-                case "end":
-                    if(tokenStrings.length > 1) {
-                        throw "Unexpected tokens after 'end'";
-                    }
-                    if(blockStack.length==0) {
-                        throw "Unexpected statement";
-                    }
-                    currentBlock = blockStack.pop();
-                    break;
-                default:
-					var expression = generateExpression(tokenStrings,0);
-					if(expression.block) {
-						currentBlock.addLine(expression.block);
-						blockStack.push(currentBlock);
-						currentBlock = expression.block;
-					} else {
-						currentBlock.addLine(expressionLine(generateExpression(tokenStrings,0)));  
-					}					                  
-            }               
+                        break;
+                    case "end":
+                        if(tokenStrings.length > 1) {
+                            throw new Error("Unexpected tokens after 'end'");
+                        }
+                        if(blockStack.length==0) {
+                            throw new Error("Unexpected statement");
+                        }
+                        currentBlock = blockStack.pop();
+                        break;
+                    default:
+                        var expression = generateExpression(tokenStrings,0);
+                        if(expression.block) {
+                            currentBlock.addLine(expression.block);
+                            blockStack.push(currentBlock);
+                            currentBlock = expression.block;
+                        } else {
+                            currentBlock.addLine(expressionLine(generateExpression(tokenStrings,0),statement));  
+                        }					                  
+                }
+            } catch(error) {
+                throw new Error(stringFormat("Unable to parse statement '{0}':\n{1}", [statement, error.message]));
+            }          
         }
         
         var lines = code.match(lineRegex);
@@ -567,7 +579,7 @@ function Compiler(variables, functions) {
             if(statementRegex.test(line)) {
                 addStatement(line.substring(1, line.length-1));            
             } else {
-                currentBlock.addLine(htmlLine(line));      
+                currentBlock.addLine(htmlLine(line.replace(/\[\[/g,"[").replace(/\]\]/g,"]")));      
             }
         }
        
