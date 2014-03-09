@@ -2,7 +2,11 @@
 	<head>
 		<title>StoryTeller</title>
 		<style>
+body { margin: 0; padding: 50px; background-color: #666666; ; color: #666666; }
+h1 {margin: 0; padding: 0;}
 .page {	display: none;}
+.header {  margin: 0; padding: 5px 10px 5px 10px; background-color: #000000 }
+.StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; }
 		</style>        
         <script type="text/javascript"  src="util.js"></script>
         <script type="text/javascript"  src="types.js"></script>
@@ -21,35 +25,26 @@ var variables = [
 ];
 		</script>
 	</head>
-	<body>
-        <div id="start" class="page">
-            <h1>Test Code</h1>
-            <p>[[[[Square Brackets!]]]]</p>
-            <ul>
-                <li>[1*2+3*4]</li>
-                <li>[1+-2]</li>
-                [$a=5-4]
-                [if($a equal 2)]
-                <li><b>2</b></li>
-                [else if($a equal 1)]
-                <li><b>1</b></li>
-                [else]
-                <li><b>0</b></li>
-                [end]  
-                <li>[randomInteger(0,100)]</li>      
-                <li>[randomNumber(0,1)]</li> 
-                <li>[randomBoolean(0.5)]</li>  
-                <li>EARTH=[earth] [link("start")][earth=earth+1]add[end]</li> 
-				[include("page23")]  
-				[link("page2")]test link[end]   [earth]      
-            </ul>
-            <h1>Le end</h1>	
+	<body>    
+        <div class="header">
+            <h1>StoryTeller</h1>
         </div>
-		<div id="page2" class="page">
-			<h1>PAGE 2</h1>
-		</div>
-		<div id="page23" class="page">
-			<h1>PAGE 23</h1>
-		</div>
+        <div class="StoryTeller">
+            <div id="start" class="page">
+                <h2>Contents</h2>
+                <ol>
+                    <li>[link("whatIsStoryTeller")]What is StoryTeller[end]</li>
+                </ol>
+            </div>
+            <div id="whatIsStoryTeller" class="page">
+                <h2>What is StoryTeller</h2>
+                
+                [include("footer")]
+            </div>
+            <div id="footer" class="page">
+                <hr/>
+                [link("start")]Back to Contents[end]
+            </div>
+        </div>
 	</body>
 </html>

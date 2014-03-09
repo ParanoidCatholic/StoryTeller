@@ -1,34 +1,41 @@
 function StoryTeller(variables) {
 	   
-    var _root = document.body;
+    var _root = null;
+                    
+    var _pages = {
+		contents: [],
+		index: {}
+	};
+		
+	var _elements = document.body.getElementsByTagName("*");
+	var _pageNumber = 0;
+		
+	for(var i=0; i<_elements.length; i++) {
+				
+		var element = _elements[i];
+		
+        switch(element.className) {
+            case "StoryTeller":
+                if(_root) {
+                    throw new Error("Multiple 'StoryTeller' Divs");
+                }
+                _root = element;
+                break;
+            case "page":			
+                if(_pages.index[element.id]) {
+                    throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
+                }
+                            
+                _pages.contents[_pageNumber] = {name: element.id, body: element.innerHTML};
+                _pages.index[element.id] = _pageNumber;
+                _pageNumber++;
+                break;                
+		}		
+	}
     
-    var _pages = function() {
-		var pages = {
-			contents: [],
-			index: {}
-		}
-		
-		var elements = document.body.getElementsByTagName("*");
-		var pageNumber = 0;
-		
-		for(var i=0; i<elements.length; i++) {
-				
-			var element = elements[i];
-				
-			if(element.className == "page") {	
-			
-				if(pages.index[element.id]) {
-					throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
-				}
-							
-				pages.contents[pageNumber] = {name: element.id, body: element.innerHTML};
-				pages.index[element.id] = pageNumber;
-				pageNumber++;
-			}		
-		}
-	
-		return pages;
-	}();
+    if(!_root) {
+        _root = document.body;
+    }
     
     var _startPage = 0;
     
@@ -43,9 +50,11 @@ function StoryTeller(variables) {
     var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
         
     var _stateContents = [_pageId, random];
-                
-    for(var i=0; i<variables.length; i++) {
-        _stateContents.push(variables[i].value);
+    
+    if(variables) {            
+        for(var i=0; i<variables.length; i++) {
+            _stateContents.push(variables[i].value);
+        }
     }
         
     function makeLink(block, pageNameExpression) {
