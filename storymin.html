@@ -1,0 +1,45 @@
+<html>
+	<head>
+		<title>StoryTeller</title>
+		<style>
+body { margin: 0; padding: 50px; background-color: #666666; ; color: #666666; }
+h1 {margin: 0; padding: 0;}
+.page {	display: none;}
+.error {color: #FF0000;}
+.header {  margin: 0; padding: 5px 10px 5px 10px; background-color: #000000 }
+.StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; }
+		</style>        
+        <script type="text/javascript"  src="storyteller.js"></script>
+		<script type="text/javascript"> 	        
+var variables = [
+    { name : "skillPoints", value : new IntegerVariable(0, 20, 20, false) },
+    { name : "earth", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "fire", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "air", value : new IntegerVariable(0, 20, 0, false) },
+    { name : "water", value : new IntegerVariable(0, 20, 0, false) }
+];
+		</script>
+	</head>
+	<body>    
+        <div class="header">
+            <h1>StoryTeller</h1>
+        </div>
+        <div class="StoryTeller">
+            <div id="start" class="page">
+                <h2>Contents</h2>
+                <ol>
+                    <li>[link("whatIsStoryTeller")]What is StoryTeller[end]</li>
+                </ol>
+            </div>
+            <div id="whatIsStoryTeller" class="page">
+                <h2>What is StoryTeller</h2>
+                
+                [include("footer")]
+            </div>
+            <div id="footer" class="page">
+                <hr/>
+                [link("start")]Back to Contents[end]
+            </div>
+        </div>
+	</body>
+</html>
