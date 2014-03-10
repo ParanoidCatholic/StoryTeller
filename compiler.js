@@ -298,9 +298,11 @@ function Compiler(variables, functions) {
         
     var globals = {};
 
-    for(var i=0; i<variables.length; i++) {
-        var variable = variables[i];
-        globals[variable.name] = {tokenType: TokenType.variable, value: variable.value};
+    if(variables) {
+        for(var i=0; i<variables.length; i++) {
+            var variable = variables[i];
+            globals[variable.name] = {tokenType: TokenType.variable, value: variable.value};
+        }
     }
 
 	var funcs = {};

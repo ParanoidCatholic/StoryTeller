@@ -44,7 +44,7 @@ function StoryTeller(variables) {
     }
     
     if(_pages.index["start"]) {
-        _startPage = pages.index["start"];
+        _startPage = _pages.index["start"];
     }
 		
     var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
@@ -99,11 +99,12 @@ function StoryTeller(variables) {
             throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageName, error.message]));
         }
 	}
-       
+           
     var functions = [
         {name: "randomInteger", operation: random.getInteger.bind(random)},
         {name: "randomNumber", operation: random.getNumber.bind(random)},
         {name: "randomBoolean", operation: random.getBoolean.bind(random)},
+        {name: "currentPage", operation: function() {return _pages.contents[_pageId.get()].name;}},
 		{name: "include", operation: includePage},
 		{name: "link", operation: makeLink, blockFunction: true}
     ];

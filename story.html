@@ -30,22 +30,39 @@ var variables = [
         <div class="header">
             <h1>StoryTeller</h1>
         </div>
-        <div class="StoryTeller">
-            <div id="start" class="page">
-                <h2>Contents</h2>
-                <ol>
-                    <li>[link("whatIsStoryTeller")]What is StoryTeller[end]</li>
-                </ol>
-            </div>
-            <div id="whatIsStoryTeller" class="page">
-                <h2>What is StoryTeller</h2>
-                
-                [include("footer")]
-            </div>
-            <div id="footer" class="page">
-                <hr/>
-                [link("start")]Back to Contents[end]
-            </div>
+        <div class="StoryTeller"></div>
+        <div id="contents" class="page">
+            <hr/>
+            <ol>
+                <li>[if(currentPage(0) equal "start")]<b>Introduction</b>[else][link("start")]Introduction[end][end]</li>
+                <li>[link("gettingStarted")]Getting Started[end]</li>
+            </ol>
         </div>
+        <div id="start" class="page">
+            <p>StoryTeller is a JavaScript application which allows you to create simple interactive stories as HTML documents.</p>
+            <p>This document was created using StoryTeller. It will serve as both an example and a reference.</p>
+            [include("contents")]
+        </div>
+        <div id="gettingStarted" class="page">
+            <h2>Getting Started</h2>
+            <p>To begin you will need to create a new text file with a .html extension.</p>
+            <p>Copy the following HTML to create an empty story</p>
+            <pre>
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      .page {display: none;}
+    &lt;/style&gt;        
+    &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;    
+    &lt;div id="start" class="page"&gt;
+    
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;                
+            </pre>
+            [include("contents")]
+        </div> 
 	</body>
 </html>
