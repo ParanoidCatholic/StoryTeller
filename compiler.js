@@ -274,6 +274,7 @@ function Compiler(variables, functions) {
 
     symbols[ContextMode.start] = {
         "(" : leftBracket,
+        ")" : rightBracket,
         "-" : negativeOperator,
         "not" : notOperator   
     };

@@ -34,11 +34,15 @@ var variables = [
         <div id="contents" class="page">
             <hr/>
             <ol>
-                <li>[if(currentPage(0) equal "start")]<b>Introduction</b>[else][link("start")]Introduction[end][end]</li>
-                <li>[link("gettingStarted")]Getting Started[end]</li>
+                <li>[if(currentPage() equal "start")]<b>Introduction</b>[else][link("start")]Introduction[end][end]</li>
+                <li>[if(currentPage() equal "gettingStarted")]<b>Getting Started</b>[else][link("gettingStarted")]Getting Started[end][end]</li>
+                <li>[if(currentPage() equal "pages")]<b>Pages</b>[else][link("pages")]Pages[end][end]</li>
+                <li>[if(currentPage() equal "links")]<b>Links</b>[else][link("links")]Links[end][end]</li>
+                <li>[if(currentPage() equal "subpages")]<b>Sub-Pages</b>[else][link("subpages")]Sub-Pages[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
+            <h2>Introduction</h2>
             <p>StoryTeller is a JavaScript application which allows you to create simple interactive stories as HTML documents.</p>
             <p>This document was created using StoryTeller. It will serve as both an example and a reference.</p>
             [include("contents")]
@@ -56,13 +60,50 @@ var variables = [
     &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
   &lt;/head&gt;
   &lt;body&gt;    
-    &lt;div id="start" class="page"&gt;
-    
+    &lt;div id="start" class="page"&gt;    
     &lt;/div&gt;
   &lt;/body&gt;
 &lt;/html&gt;                
-            </pre>
+            </pre>            
             [include("contents")]
         </div> 
+        <div id="pages" class="page">
+            <h2>Pages</h2>
+            <p>Like a book, your story will consist of a number of pages.</p>
+            <p>Each page is an element (generally a &lt;div&gt;) with the class "page". It is important that this class be set, otherwise StoryTeller will not recognise it as a page.</p>
+            <p>Every page in your story must have a unique id.</p>
+            <p>Example:<p>
+            <pre>
+ &lt;div id="start" class="page"&gt;
+    Welcome to my story!
+ &lt;/div&gt;           
+            </pre>
+            <p>This is a page with the id "start". It will show the message "Welcome to my story!"</p>
+            <p>"start" is a special id. If indicated to StoryTeller that this page is the start of the first one a reader should see. If no "start" page is found StoryTeller will use the first page in the document.</p>
+            [include("contents")]
+        </div>
+        <div id="links" class="page">
+            <h2>Links</h2>
+            <p>In order to allow you reader to make choices you must add links from the current page to other pages in the story.</p>
+            <p>A link is added like this: [link("{destinationId}")]{linkBody}[end]</p>
+            <p>Replace {destinationId} with the id of the page you are linking to and {linkBody} with the content you want to display as the link.</p>
+            <p>Example:<p>
+            <pre>
+ &lt;div id="start" class="page"&gt;
+    Welcome to my story!
+    [[link("page2")]]next page[[end]]
+ &lt;/div&gt;     
+ &lt;div id="page2" class="page"&gt;
+    The End
+ &lt;/div&gt;   
+            </pre>
+            <p>This example has two pages, "start" and "page2". The link will take the reader from "start" to "page2" when they click on the text "next page"</p>
+            [include("contents")]
+        </div>
+        <div id="subpages" class="page">
+            <h2>Sub-Pages</h2>
+            
+            [include("contents")]
+        </div>
 	</body>
 </html>
