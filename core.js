@@ -111,15 +111,16 @@ function StoryTeller(variables) {
     var _compiler = new Compiler(variables, functions);
     	        
     function showPage() {        
-        var compiled = _compiler.compile(_pages.contents[_pageId.get()].body);	
-        var outputBuilder = new StringBuilder();
         
-        try {
+		try {
+			var compiled = _compiler.compile(_pages.contents[_pageId.get()].body);	
+			var outputBuilder = new StringBuilder();
+        
             compiled.execute(outputBuilder);
             _root.innerHTML = outputBuilder.getValue();
         } catch (error) {
             console.log(stringFormat("Error in page '{0}'\n{1}",[_pages.contents[_pageId.get()].name,error.message]));
-            _root.innerHTML = "An error has occurred."
+            _root.innerHTML = '<span class="error">An error has occurred.</span>'
         }
     }
     

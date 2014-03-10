@@ -436,14 +436,14 @@ function Compiler(variables, functions) {
         }
     }
 
-    var lineRegex = /((\[\[)|([^[]))+|(\[[^\]]*\])/g;
-    var statementRegex = /^\[[^\[]/;
-    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$[_a-zA-Z0-9]+)|([_a-zA-Z][_a-zA-Z0-9]*)|("([^"]|\\")*")/g;
+    var lineRegex = /((\[\[)|([^[]))+|(\[(("(([\\]")|[^"])*")|([^\]]))*\])/g;
+    var statementRegex = /^\[(("((\\")|[^"])*")|([^\]]))*\]$/;
+    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$[_a-zA-Z0-9]+)|([_a-zA-Z][_a-zA-Z0-9]*)|("((\\")|[^"])*")/g;
 
     var identifierRegex = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
     var localRegex = /^\$[_a-zA-Z0-9]+$/;
     var numberRegex = /^([0-9]*\.[0-9])|([0-9]+)$/;
-    var stringRegex = /^"([^"]|\\")*"$/;
+    var stringRegex = /^"((\\")|[^"])*"$/;
 
     function htmlLine(html) {
         return {
@@ -500,7 +500,7 @@ function Compiler(variables, functions) {
                     return {tokenType: TokenType.literal, value: Number(tokenString)};
                 }
                 if(stringRegex.test(tokenString)) {
-                    return {tokenType: TokenType.literal, value: tokenString.substring(1,tokenString.length-1)};
+                    return {tokenType: TokenType.literal, value: tokenString.substring(1,tokenString.length-1).replace(/(\\")/g,'"')};
                 }
             }
 
