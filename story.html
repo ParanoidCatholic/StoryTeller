@@ -6,7 +6,7 @@ body { margin: 0; padding: 50px; background-color: #666666; ; color: #666666; }
 h1 {margin: 0; padding: 0;}
 .page {	display: none;}
 .error {color: #FF0000;}
-.header {  margin: 0; padding: 5px 10px 5px 10px; background-color: #000000 }
+.header {margin: 0; padding: 5px 10px 5px 10px; background-color: #000000 }
 .StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; }
 		</style>        
         <script type="text/javascript"  src="util.js"></script>
@@ -39,7 +39,7 @@ var variables = [
                 <li>[if(currentPage() equal "pages")]<b>Pages</b>[else][link("pages")]Pages[end][end]</li>
                 <li>[if(currentPage() equal "links")]<b>Links</b>[else][link("links")]Links[end][end]</li>
                 <li>[if(currentPage() equal "includes")]<b>Including One Page In Another</b>[else][link("includes")]Including One Page In Another[end][end]</li>
-				<li>[if(currentPage() equal "custom")]<b>Customising Presentation</b>[else][link("custom")]Customising Presentation[end][end]</li>
+				<li>[if(currentPage() equal "decoration")]<b>Decorating Your Story</b>[else][link("decoration")]Decorating Your Story[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -76,7 +76,7 @@ var variables = [
             <p>Example:<p>
             <pre>
  &lt;div id="start" class="page"&gt;
-    &lt;h1&gt;Welcome to my story!&lt;/h1&gt;
+    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
  &lt;/div&gt;           
             </pre>
             <p>This is a page with the id "start". It will show the message "Welcome to my story!" You can include any HTML elements you like to structure the content of your pages.</p>
@@ -92,7 +92,7 @@ var variables = [
             <p>Example:<p>
             <pre>
  &lt;div id="start" class="page"&gt;
-    &lt;h1&gt;Welcome to my story!&lt;/h1&gt;
+    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
     [[link("page2")]]next page[[end]]
  &lt;/div&gt;     
  &lt;div id="page2" class="page"&gt;
@@ -109,7 +109,7 @@ var variables = [
             <p>Example:<p>
             <pre>
  &lt;div id="start" class="page"&gt;
-    &lt;h1&gt;Welcome to my story!&lt;/h1&gt;
+    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
     [[include("subpage")]]
  &lt;/div&gt;     
  &lt;div id="subpage" class="page"&gt;
@@ -119,13 +119,34 @@ var variables = [
 			<p>This will display "Welcome to my story!" and "I hope you like it." all on one page.</p>
             [include("contents")]
         </div>
-		<div id="custom" class="page">
-            <h2>Customising Presentation</h2>
-            <p></p>
-			<p>Example:<p>
-            <pre> 
-            </pre>	
-			<p></p>
+		<div id="decoration" class="page">
+            <h2>Decorating Your Story</h2>
+            <p>You can add some style to your story with CSS but to achieve the look you want you may need to use HTML elements like &lt;div&gt;s</p>
+            <p>By default, StoryTeller replaces the entire content of the &lt;body&gt; element with the current page. This will overwrite any extra elements you might have added.</p>
+            <p>In order to avoid this, you must tell StoryTeller to use a specific element to display pages. This is done by giving that element (usually a &lt;div&gt;) the class "StoryTeller". The pages will be displayed inside this element and the content outside of it will remain unaltered.</p>
+			<p>Example:</p>
+            <pre>
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      .page {display: none;}
+      .banner {background-color: #000000; color: #FFFFFF;}
+    &lt;/style&gt;        
+    &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div class="banner"&gt;
+        &lt;h1&gt;My Story&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;div class="StoryTeller"&gt;
+        &lt;div id="start" class="page"&gt;
+            Welcome
+        &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;    
+            </pre>
+            <p>This story will have a permanent header which reads "My Story". The pages can be defined anywhere in the &lt;body&gt;. They won't be visible anyway. However, it may be most convenient to keep them inside the "StoryTeller" element.</p>
             [include("contents")]
         </div>
 	</body>

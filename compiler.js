@@ -1,5 +1,14 @@
 function Compiler(variables, functions) {
 
+    var lineRegex = /((\[\[)|([^[]))+|(\[(("(([\\]")|[^"])*")|([^\]]))*\])/g;
+    var statementRegex = /^\[(("((\\")|[^"])*")|([^\]]))*\]$/;
+    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$[_a-zA-Z0-9]+)|([_a-zA-Z][_a-zA-Z0-9]*)|("((\\")|[^"])*")/g;
+
+    var identifierRegex = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
+    var localRegex = /^\$[_a-zA-Z0-9]+$/;
+    var numberRegex = /^([0-9]*\.[0-9])|([0-9]+)$/;
+    var stringRegex = /^"((\\")|[^"])*"$/;
+
     function LocalVariable() {
         
         var _value;
@@ -182,6 +191,41 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
+    
+    function notEqualExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value!=rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function lessThanExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value<rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function lessThanOrEqualExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value<=rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function greaterThanExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value>rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function greaterThanOrEqualExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value>=rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
 
     function additionExpression(leftOperand,rightOperand) {
         return {
@@ -260,8 +304,13 @@ function Compiler(variables, functions) {
     var leftBracket = {tokenType: TokenType.leftBracket};
     var rightBracket = {tokenType: TokenType.rightBracket};
     var separator = {tokenType: TokenType.separator};
-    var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression};
+    var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression};    
     var equalOperator = {tokenType: TokenType.operator, precedence: 1, expression: equalExpression};
+    var notEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: notEqualExpression};
+    var lessThanOperator = {tokenType: TokenType.operator, precedence: 1, expression: lessThanExpression};
+    var lessThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: lessThanOrEqualExpression};
+    var greaterThanOperator = {tokenType: TokenType.operator, precedence: 1, expression: greaterThanExpression};
+    var greaterThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: greaterThanOrEqualExpression};
     var additionOperator = {tokenType: TokenType.operator, precedence: 2, expression: additionExpression};
     var subtractionOperator = {tokenType: TokenType.operator, precedence: 2, expression: subtractionExpression};
     var multiplicationOperator = {tokenType: TokenType.operator, precedence: 3, expression: multiplicationExpression};
@@ -284,6 +333,11 @@ function Compiler(variables, functions) {
         "," : separator,
         "=" : assignmentOperator,
         "equal" : equalOperator,
+        "notEqual" : notEqualOperator,
+        "lessThan" : lessThanOperator,
+        "lessThanOrEqual" : lessThanOrEqualOperator,
+        "greaterThan" : greaterThanOperator,
+        "greaterThanOrEqual" : greaterThanOrEqualOperator,
         "+" : additionOperator,
         "-" : subtractionOperator,    
         "*" : multiplicationOperator,
@@ -296,16 +350,19 @@ function Compiler(variables, functions) {
     symbols[ContextMode.func] = {
         "(" : leftBracket
     };
-        
-    var globals = {};
-
-    if(variables) {
-        for(var i=0; i<variables.length; i++) {
-            var variable = variables[i];
-            globals[variable.name] = {tokenType: TokenType.variable, value: variable.value};
-        }
-    }
-
+    
+    var reserved = {
+        "if": true,
+        "else": true,
+        "end": true,
+        "equal": true,
+        "notEqual": true,
+        "lessThan": true,
+        "lessThanOrEqual": true,
+        "greaterThan": true,
+        "greaterThanOrEqual": true
+    };
+    
 	var funcs = {};
     
     for(var i=0; i<functions.length; i++) {
@@ -315,6 +372,19 @@ function Compiler(variables, functions) {
 		} else {
 			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation}
 		}
+    }
+    
+    var globals = {};
+
+    if(variables) {
+        for(var i=0; i<variables.length; i++) {        
+            var variable = variables[i];
+            var name = variable.name;
+            if(!identifierRegex.test(name) || reserved[name] || funcs[name]) {
+                throw Error(stringFormat("Illegal variable name '{0}'",[name]));
+            }
+            globals[name] = {tokenType: TokenType.variable, value: variable.value};
+        }
     }
 			
     function RpnExpressionBuilder() {
@@ -438,16 +508,7 @@ function Compiler(variables, functions) {
             return _builder.getExpression();
         }
     }
-
-    var lineRegex = /((\[\[)|([^[]))+|(\[(("(([\\]")|[^"])*")|([^\]]))*\])/g;
-    var statementRegex = /^\[(("((\\")|[^"])*")|([^\]]))*\]$/;
-    var tokenRegex = /[^\$_a-zA-Z0-9\s"]|([0-9]*\.[0-9]+)|([0-9]+)|(\$[_a-zA-Z0-9]+)|([_a-zA-Z][_a-zA-Z0-9]*)|("((\\")|[^"])*")/g;
-
-    var identifierRegex = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
-    var localRegex = /^\$[_a-zA-Z0-9]+$/;
-    var numberRegex = /^([0-9]*\.[0-9])|([0-9]+)$/;
-    var stringRegex = /^"((\\")|[^"])*"$/;
-
+    
     function htmlLine(html) {
         return {
             execute: function(outputBuilder) {
