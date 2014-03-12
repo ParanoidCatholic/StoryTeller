@@ -41,13 +41,6 @@ function Compiler(variables, functions) {
         func: 3
     };
 
-    function literalToken(value) {
-        return {
-            tokenType: TokenType.literal,
-            value: value
-        }
-    }
-
     var tokenTypeMode = [];
      
     tokenTypeMode[TokenType.leftBracket] = ContextMode.start;
@@ -325,7 +318,9 @@ function Compiler(variables, functions) {
         "(" : leftBracket,
         ")" : rightBracket,
         "-" : negativeOperator,
-        "not" : notOperator   
+        "not" : notOperator,
+        "true": {tokenType: TokenType.literal, value: true},
+        "false": {tokenType: TokenType.literal, value: false}
     };
 
     symbols[ContextMode.complete] = {
@@ -360,7 +355,9 @@ function Compiler(variables, functions) {
         "lessThan": true,
         "lessThanOrEqual": true,
         "greaterThan": true,
-        "greaterThanOrEqual": true
+        "greaterThanOrEqual": true,
+        "true": true,
+        "false": true
     };
     
 	var funcs = {};

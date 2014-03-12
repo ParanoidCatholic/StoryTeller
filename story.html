@@ -8,6 +8,8 @@ h1 {margin: 0; padding: 0;}
 .error {color: #FF0000;}
 .header {margin: 0; padding: 5px 10px 5px 10px; background-color: #000000; border-radius: 25px 25px 0 0; }
 .StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; border-radius: 0 0 25px 25px; }
+table {margin: 0 0 0 50px; border-collapse:collapse;}
+td { text-align: right; border: 1px solid black;}
 		</style>        
         <script type="text/javascript"  src="util.js"></script>
         <script type="text/javascript"  src="types.js"></script>
@@ -18,7 +20,8 @@ h1 {margin: 0; padding: 0;}
 		<script type="text/javascript"  src="core.js"></script>
 		<script type="text/javascript"> 	        
 var variables = [
-    { name : "variablesPageViews", value : new IntegerVariable(0, 21, 0, false) }
+    { name : "variablesPageViews", value : new IntegerVariable(0, 21, 0, false) },
+    { name : "detail", value : new BooleanVariable(false) }
 ];
 		</script>
 	</head>
@@ -37,6 +40,7 @@ var variables = [
                 <li>[if(currentPage() equal "includes")]<b>Including One Page In Another</b>[else][link("includes")]Including One Page In Another[end][end]</li>
 				<li>[if(currentPage() equal "decoration")]<b>Decorating Your Story</b>[else][link("decoration")]Decorating Your Story[end][end]</li>
 				<li>[if(currentPage() equal "variables")]<b>Variables</b>[else][link("variables")]Variables[end][end]</li>
+                <li>[if(currentPage() equal "usingVariables")]<b>Using Variables</b>[else][link("usingVariables")]Using Variables[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -149,22 +153,60 @@ var variables = [
 		<div id="variables" class="page">
             <h2>Variables</h2>
 			[variablesPageViews=variablesPageViews+1]
-			<p>Variables allow your story can rememeber what has happened so far. This information can be used to change the content of a page.</p>
+			<p>Variables allow your story can remember what has happened so far. This information can be used to change the content of a page.</p>
 			<p>For example. <b>[if(variablesPageViews equal 1)]This is your first visit to this page[else if(variablesPageViews lessThanOrEqual 20)]You've seen this page [variablesPageViews] times[else]You've seen this page more than 20 times[end] since you opened this document.</b></p>
-			<p>Before you can use these varaibles in your pages, they must be declared in a &lt;script&gt; element after the existing &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt; element.</p>
+			<p>Before you can use these variables in your pages, they must be declared in a &lt;script&gt; element after the existing &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt; element.</p>
 			<p>Example:</p>
 			<pre>
 &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
 &ltscript type="text/javascript"&gt; 	
   var variables = [[
-    { name : "myNumber", value : new NumberVariable(0) },
     { name : "myBoolean", value : new BooleanVariable(true) },
+    { name : "myNumber", value : new NumberVariable(0) },    
     { name : "myInteger1", value : new IntegerVariable(0, 100, 0, false) },
-    { name : "myInteger2", value : new IntegerVariable(0, 10, 10, true) }
+    { name : "myInteger2", value : new IntegerVariable(1, 10, 10, true) }
   ]];		
 &lt;/script&gt;
 			</pre>
+            <p>This is a JavaScript array containing a coma-separated list of variable definitions. Each entry takes the form { name : "{variableName}", value : new {variableType}({arguments}) }.</p>
+            <p>{variableName} is the name which will identify this variable. It may only contain letters, numbers and underscores ('_') and the first character must not be a number.</p>
+            <p>There are three possibilities for {variableType}.</p>
+            <p>A BooleanVariable can cold either true or false. It takes one argument, the value it initially holds.</p>
+            <p>A NumberVariable can hold numbers with fractional parts (like 3.14159 or 0.00001). It can also hold very large numbers. It also takes its initial value as its only argument.</p>
+            <p>An IntegerVariable can hold whole numbers in a limited range. It has 4 arguments ({minimumValue}, {maximumValue}, {initialValue}, {wrap}). {minimumValue}  and {maximumValue} define the range of values which this variable can hold. {initialValue} sets the value which the variable will start as. 
+            <p>{wrap} tells the varaible what to do when you try to put a number too big or too small into the variable. If it is false, then then any value less than {minimumValue} will become {minimumValue} and any value greater than {maximumValue} will become {maximumValue}. If it is true then the value will wrap around. For example, myInteger2 has {minimumValue}=1 and {maximumValue}=10. If you try to set the value 11. It will become 1. 23 will become 3 and -1 will become 9.</p>
+            [if(detail)]
+            <p><i>The following might get slightly technical. It's not that important and you can skip it if you like.</i> [link("variables")][detail=false]Click here to hide the technical stuff.[end]</p>
+            <p>The value of each variable is maintained in the address bar of the reader's web browser. As you read this document you can see a random-looking string of characters after the file name (starting with '#'). This allows the reader to bookmark any position in the story and return to it later without losing the state of they variables. The space in the address bar is limited. That limit varies from browser to browser but the address (including everything before the '#' too) can safely be up to 2000 characters long.</p>
+            <p>Each variable you create will add to the length. BooleanVariables are the smallest. 6 of them can fit in one character on the address bar. NumberVariables are the largest each will take up to 11 characters (Actually it's slightly less than that, 3 NumberVaraibles will be packed into 32 characters).</p>
+            <p>The size of an IntegerVariable depends on the range of values it can hold. The following table show some of the possible sizes.</p>
+            <table>
+                <tr><th>Range</th><th>Characters</th></tr>
+                <tr><td>64</td><td>1</td></tr>
+                <tr><td>4 096</td><td>2</td></tr>
+                <tr><td>262 144</td><td>3</td></tr>
+                <tr><td>16 777 216</td><td>4</td></tr>
+                <tr><td>1 073 741 824</td><td>5</td></tr>
+            </table>
+            <p>For example. IntegerVariable(0,63,0,false) can hold 64 different values so it will need 1 character in the address bar to hold its state.</p>
+            [else]
+            <p><i>There are some slightly technical details hidden here. You don't really need to read it.</i> [link("variables")][detail=true]Click here to show the technical stuff.[end]</p>
+            [end]
 			[include("contents")]
 		</div>
+        <div id="usingVariables" class="page">
+            <h2>Using Variables</h2>
+            <p>Once you have declared a variable, you can use it in your pages. To display the value of a variable simply write its name in square brackets: [[{varaibleName}]]<p>
+            <p>For example, if you declare a variable named myInteger:</p>
+            <pre>
+var variables = [[
+  { name : "myInteger", value : new IntegerVariable(0, 255, 42, false) }
+]]; 
+            </pre>
+            <p>You can use it in a page like this:</p>
+            <pre>
+            </pre>
+            [include("contents")]
+        </div>
 	</body>
 </html>
