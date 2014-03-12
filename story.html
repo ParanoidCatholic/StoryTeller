@@ -6,8 +6,8 @@ body { margin: 0; padding: 50px; background-color: #666666; ; color: #666666; }
 h1 {margin: 0; padding: 0;}
 .page {	display: none;}
 .error {color: #FF0000;}
-.header {margin: 0; padding: 5px 10px 5px 10px; background-color: #000000 }
-.StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; }
+.header {margin: 0; padding: 5px 10px 5px 10px; background-color: #000000; border-radius: 25px 25px 0 0; }
+.StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; border-radius: 0 0 25px 25px; }
 		</style>        
         <script type="text/javascript"  src="util.js"></script>
         <script type="text/javascript"  src="types.js"></script>
@@ -18,11 +18,7 @@ h1 {margin: 0; padding: 0;}
 		<script type="text/javascript"  src="core.js"></script>
 		<script type="text/javascript"> 	        
 var variables = [
-    { name : "skillPoints", value : new IntegerVariable(0, 20, 20, false) },
-    { name : "earth", value : new IntegerVariable(0, 20, 0, false) },
-    { name : "fire", value : new IntegerVariable(0, 20, 0, false) },
-    { name : "air", value : new IntegerVariable(0, 20, 0, false) },
-    { name : "water", value : new IntegerVariable(0, 20, 0, false) }
+    { name : "variablesPageViews", value : new IntegerVariable(0, 21, 0, false) }
 ];
 		</script>
 	</head>
@@ -40,6 +36,7 @@ var variables = [
                 <li>[if(currentPage() equal "links")]<b>Links</b>[else][link("links")]Links[end][end]</li>
                 <li>[if(currentPage() equal "includes")]<b>Including One Page In Another</b>[else][link("includes")]Including One Page In Another[end][end]</li>
 				<li>[if(currentPage() equal "decoration")]<b>Decorating Your Story</b>[else][link("decoration")]Decorating Your Story[end][end]</li>
+				<li>[if(currentPage() equal "variables")]<b>Variables</b>[else][link("variables")]Variables[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -75,9 +72,9 @@ var variables = [
             <p>Every page in your story must have a unique id.</p>
             <p>Example:<p>
             <pre>
- &lt;div id="start" class="page"&gt;
-    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
- &lt;/div&gt;           
+&lt;div id="start" class="page"&gt;
+  &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
+&lt;/div&gt;           
             </pre>
             <p>This is a page with the id "start". It will show the message "Welcome to my story!" You can include any HTML elements you like to structure the content of your pages.</p>
 			<p>Styling can be done with CSS just like any other HTML document. However, make sure that you keep ".page {display: none;}" in the &lt;style&gt; element. This ensures that the reader won't see the unprocessed pages of your story.</p>
@@ -91,13 +88,13 @@ var variables = [
             <p>Replace {pageId} with the id of the page you are linking to and {linkBody} with the content you want to display as the link.</p>
             <p>Example:<p>
             <pre>
- &lt;div id="start" class="page"&gt;
-    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
-    [[link("page2")]]next page[[end]]
- &lt;/div&gt;     
- &lt;div id="page2" class="page"&gt;
-    The End
- &lt;/div&gt;   
+&lt;div id="start" class="page"&gt;
+  &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
+  [[link("page2")]]next page[[end]]
+&lt;/div&gt;     
+&lt;div id="page2" class="page"&gt;
+  The End
+&lt;/div&gt;   
             </pre>
             <p>This example has two pages, "start" and "page2". The link will take the reader from "start" to "page2" when they click on the text "next page"</p>
             [include("contents")]
@@ -108,13 +105,13 @@ var variables = [
 			<p>The [[include("{pageId}")]] command will display the content of another page as though it was a part of the current page. Just replace {pageId} with the id of the page to be included</p>
             <p>Example:<p>
             <pre>
- &lt;div id="start" class="page"&gt;
-    &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
-    [[include("subpage")]]
- &lt;/div&gt;     
- &lt;div id="subpage" class="page"&gt;
-    I hope you like it.
- &lt;/div&gt;   
+&lt;div id="start" class="page"&gt;
+  &lt;h3&gt;Welcome to my story!&lt;/h3&gt;
+  [[include("subpage")]]
+&lt;/div&gt;     
+&lt;div id="subpage" class="page"&gt;
+  I hope you like it.
+&lt;/div&gt;   
             </pre>	
 			<p>This will display "Welcome to my story!" and "I hope you like it." all on one page.</p>
             [include("contents")]
@@ -149,5 +146,25 @@ var variables = [
             <p>This story will have a permanent header which reads "My Story". The pages can be defined anywhere in the &lt;body&gt;. They won't be visible anyway. However, it may be most convenient to keep them inside the "StoryTeller" element.</p>
             [include("contents")]
         </div>
+		<div id="variables" class="page">
+            <h2>Variables</h2>
+			[variablesPageViews=variablesPageViews+1]
+			<p>Variables allow your story can rememeber what has happened so far. This information can be used to change the content of a page.</p>
+			<p>For example. <b>[if(variablesPageViews equal 1)]This is your first visit to this page[else if(variablesPageViews lessThanOrEqual 20)]You've seen this page [variablesPageViews] times[else]You've seen this page more than 20 times[end] since you opened this document.</b></p>
+			<p>Before you can use these varaibles in your pages, they must be declared in a &lt;script&gt; element after the existing &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt; element.</p>
+			<p>Example:</p>
+			<pre>
+&lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
+&ltscript type="text/javascript"&gt; 	
+  var variables = [[
+    { name : "myNumber", value : new NumberVariable(0) },
+    { name : "myBoolean", value : new BooleanVariable(true) },
+    { name : "myInteger1", value : new IntegerVariable(0, 100, 0, false) },
+    { name : "myInteger2", value : new IntegerVariable(0, 10, 10, true) }
+  ]];		
+&lt;/script&gt;
+			</pre>
+			[include("contents")]
+		</div>
 	</body>
 </html>
