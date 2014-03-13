@@ -205,7 +205,49 @@ var variables = [[
             </pre>
             <p>You can use it in a page like this:</p>
             <pre>
+&lt;div id="start" class="page"&gt;
+  The value of myInteger is [[myInteger]].
+&lt;/div&gt;			
             </pre>
+			<p>This will display the text "The value of myInteger is 42"</p>
+			<p>You can update the value of a varaible at any point in a page like this: [[{variableName}={expression}]]. {expresson} can be a value or a mathematical expression. [[myInteger=83]] will update the value to 83. [[myInteger=myInteger+1]] will increase the value of myInteger by 1.</p>
+			<p>Inside a link varaibles operate slightly differently. Any changes made between [[link("{pageId}")]] and [[end]] will be undone after [[end]]. They will however, be applied if the reader follows the link.</p>
+			<p>Example:</p>
+			<pre>
+&lt;div id="start" class="page"&gt;
+  [[myInteger=1]]
+  &lt;h2>This is the start page&gt;/h2>
+  &lt;p>[[link("page2")]][[myInteger=5]]Go To Page 2[[end]]&gt;/p>
+  &lt;p>myInteger is [[myInteger]]&lt;/p&gt;
+&lt;/div&gt;	
+&lt;div id="page2" class="page"&gt;
+  &lt;h2>This is page 2&lt;/h2&gt;
+  &lt;p>myInteger is [[myInteger]]&lt;/p&gt;
+&lt;/div&gt;		
+			</pre>
+			<p>On the start page. The user will see "myInteger is 1". If they click the link they will see "myInteger is 5"</p>
+			<p>This can be used to allow a user's choice to change values while remaining on the same page.</p>
+			<p>Here's an example which allows the reader to distribute skill points for their character.</p>
+			<pre>
+var variables = [[
+  { name : "pointsRemaining", value : new IntegerVariable(0, 20, 20, false) },
+  { name : "strength", value : new IntegerVariable(0, 20, 0, false) },
+  { name : "intelligence", value : new IntegerVariable(0, 20, 0, false) },
+  { name : "charisma", value : new IntegerVariable(0, 20, 0, false) }
+]]; 
+
+...
+
+&lt;div id="start" class="page"&gt;
+  [[myInteger=1]]
+  &lt;h2&gt;Distribute Your Skill Points&lt;/h2&gt;
+  &lt;p&gt;You have [[pointsRemaining]] points remaining&lt;/p&gt;
+  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[strength=strength+1]]Add Strength[[end]]&lt;/p&gt;
+  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[intelligence=intelligence+1]]Add Intelligence[[end]]&lt;/p&gt;
+  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[charisma=charisma+1]]Add Charisma[[end]]&lt;/p&gt;
+&lt;/div&gt;	
+			</pre>
+			<p></p>
             [include("contents")]
         </div>
 	</body>
