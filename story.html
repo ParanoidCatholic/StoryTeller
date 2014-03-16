@@ -3,13 +3,14 @@
 		<title>StoryTeller</title>
 		<style>
 body { margin: 0; padding: 50px; background-color: #666666; ; color: #666666; }
-h1 {margin: 0; padding: 0;}
+h1 {margin: 0 0 0 1em; padding: 0;}
 .page {	display: none;}
 .error {color: #FF0000;}
 .header {margin: 0; padding: 5px 10px 5px 10px; background-color: #000000; border-radius: 25px 25px 0 0; }
 .StoryTeller { margin: 0; padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; border-color: #000000; border-radius: 0 0 25px 25px; }
 table {margin: 0 0 0 50px; border-collapse:collapse;}
 td { text-align: right; border: 1px solid black;}
+.indented {padding: 0 0 0 10em;}
 		</style>        
         <script type="text/javascript"  src="util.js"></script>
         <script type="text/javascript"  src="types.js"></script>
@@ -18,7 +19,7 @@ td { text-align: right; border: 1px solid black;}
         <script type="text/javascript"  src="state.js"></script>
 		<script type="text/javascript"  src="compiler.js"></script>
 		<script type="text/javascript"  src="core.js"></script>
-		<script type="text/javascript"> 	        
+		<script type="text/javascript">
 var variables = [
     { name : "variablesPageViews", value : new IntegerVariable(0, 21, 0, false) },
     { name : "detail", value : new BooleanVariable(false) }
@@ -41,6 +42,9 @@ var variables = [
 				<li>[if(currentPage() equal "decoration")]<b>Decorating Your Story</b>[else][link("decoration")]Decorating Your Story[end][end]</li>
 				<li>[if(currentPage() equal "variables")]<b>Variables</b>[else][link("variables")]Variables[end][end]</li>
                 <li>[if(currentPage() equal "usingVariables")]<b>Using Variables</b>[else][link("usingVariables")]Using Variables[end][end]</li>
+                <li>[if(currentPage() equal "localVariables")]<b>Local Variables</b>[else][link("localVariables")]Local Variables[end][end]</li>
+                <li>[if(currentPage() equal "conditional")]<b>Conditional Statements</b>[else][link("conditional")]Conditional Statements[end][end]</li>
+                <li>[if(currentPage() equal "randomness")]<b>Randomness</b>[else][link("randomness")]Randomness[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -58,6 +62,7 @@ var variables = [
   &lt;head&gt;
     &lt;style&gt;
       .page {display: none;}
+      .error {color: #FF0000;}
     &lt;/style&gt;        
     &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
   &lt;/head&gt;
@@ -83,6 +88,7 @@ var variables = [
             <p>This is a page with the id "start". It will show the message "Welcome to my story!" You can include any HTML elements you like to structure the content of your pages.</p>
 			<p>Styling can be done with CSS just like any other HTML document. However, make sure that you keep ".page {display: none;}" in the &lt;style&gt; element. This ensures that the reader won't see the unprocessed pages of your story.</p>
             <p>"start" is a special id. If indicated to StoryTeller that this page is the start of the first one a reader should see. If no "start" page is found StoryTeller will use the first page in the document.</p>
+            <p>Square brackets ('[[' and ']]') indicate special instructions for StoryTeller. If you want to include square brackets in the text shown to the reader use double brackets ('[[[[' and ']]]]'). These will be replaced by single brackets in the text shown to the reader.</p>
             [include("contents")]
         </div>
         <div id="links" class="page">
@@ -131,6 +137,7 @@ var variables = [
   &lt;head&gt;
     &lt;style&gt;
       .page {display: none;}
+      .error {color: #FF0000;}
       .banner {background-color: #000000; color: #FFFFFF;}
     &lt;/style&gt;        
     &lt;script type="text/javascript"  src="storyteller.js"&gt;&lt;/script&gt;
@@ -210,8 +217,11 @@ var variables = [[
 &lt;/div&gt;			
             </pre>
 			<p>This will display the text "The value of myInteger is 42"</p>
-			<p>You can update the value of a varaible at any point in a page like this: [[{variableName}={expression}]]. {expresson} can be a value or a mathematical expression. [[myInteger=83]] will update the value to 83. [[myInteger=myInteger+1]] will increase the value of myInteger by 1.</p>
-			<p>Inside a link varaibles operate slightly differently. Any changes made between [[link("{pageId}")]] and [[end]] will be undone after [[end]]. They will however, be applied if the reader follows the link.</p>
+			<p>You can update the value of a variable at any point in a page like this: [[{variableName}={expression}]]. {expression} can be a value or a mathematical expression. [[myInteger=83]] will update the value to 83. [[myInteger=myInteger+1]] will increase the value of myInteger by 1.</p>
+            <p>Expressions can use the mathematical operators '+', '-', '*'(multiply) and '/'(divide) along with brackets for grouping.</p>            
+			<p>Expressions can also compare values with the operators 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan' and 'greaterThanOrEqualTo'. For example "7 lessThan 3" will result in the value 'false'.</p>
+            <p>Boolean values can be combined with the operators 'and' and 'or'. For example "(1 greaterThanOrEqual 2) or (3 lessThan 4)" will be true. The 'not' operator will invert a boolean value. For example "not (1 equal 2)" will be true.</p>
+            <p>Inside a link variables operate slightly differently. Any changes made between [[link("{pageId}")]] and [[end]] will be undone after [[end]]. They will however, be applied if the reader follows the link.</p>
 			<p>Example:</p>
 			<pre>
 &lt;div id="start" class="page"&gt;
@@ -239,15 +249,208 @@ var variables = [[
 ...
 
 &lt;div id="start" class="page"&gt;
-  [[myInteger=1]]
   &lt;h2&gt;Distribute Your Skill Points&lt;/h2&gt;
   &lt;p&gt;You have [[pointsRemaining]] points remaining&lt;/p&gt;
-  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[strength=strength+1]]Add Strength[[end]]&lt;/p&gt;
-  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[intelligence=intelligence+1]]Add Intelligence[[end]]&lt;/p&gt;
-  &lt;p&gt;[[link("start")]][[pointsRemaining=pointsRemaining-1]][[charisma=charisma+1]]Add Charisma[[end]]&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Strength: [[strength]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[strength=strength+1]]add[[end]]&lt;/li&gt;
+    &lt;li&gt;Intelligence: [[intelligence]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[intelligence=intelligence+1]]add[[end]]&lt;/li&gt;
+    &lt;li&gt;Charisma: [[charisma]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[charisma=charisma+1]]add[[end]]&lt;/li&gt;
+  &lt;/ul&gt;
 &lt;/div&gt;	
 			</pre>
-			<p></p>
+			<p>When the reader clicks on one of the links, it will increase the associated attribute and decrease the points remaining. Note: This will not stop the reader from distributing after pointsRemaining reaches 0. To do that you need [link("conditional")]conditional statements[end].</p>
+            [include("contents")]
+        </div>
+        <div id="localVariables" class="page">
+            <h2>Local Variables</h2>
+            <p>Sometimes you only need a variable for calculations within a page and it is unnecessary for StoryTeller to remember it after the reader clicks a link.</p>
+            <p>For this purpose you can use local variables. These do not need to be declared before they are used and do not take up space in the address bar.</p>
+            <p>Local variable names start with a dollar sign ('$') and, after that, consist of any combination of numbers, letters and underscores. They can be used anywhere in which standard variables can be.</p>
+            <p>Example:</p>
+            <pre>
+&lt;div id="start" class="page"&gt;
+  [[$localVariable=3]]
+  &lt;p&gt;$localVariable = [[$localVariable]]&lt;/p&gt;
+  [[$localVariable=$localVariable*7]]
+  &lt;p&gt;$localVariable = [[$localVariable]]&lt;/p&gt;
+  &lt;p&gt;[[link("page2")]]Go to page 2[[end]]&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id="page2" class="page"&gt;
+  &lt;p&gt;$localVariable = [[$localVariable]]&lt;/p&gt;
+&lt;/div&gt;
+            </pre>
+            <p>The start page will display "$localVariable = 3" then "$localVariable = 21". However, when the reader clicks "Go to page 2" the value will be forgotten and will display "$localVariable =" (local variables which have not been set have no value)</p>
+            <p>Local variables can store any type of value. They can even hold text, something that standard variables cannot. Text values are written between quotation marks.</p>
+            <p>Example:</p>
+            <pre>
+&lt;div id="start" class="page"&gt;
+  [[$myName="Inigo Montoya"]]
+  &lt;p&gt;Hello. My name is [[$myName]]!&lt;/p&gt;
+&lt;/div&gt;
+            </pre>
+            <p>This will display "Hello. My name is Inigo Montoya."</p>
+            <p>Text values can also be joined with the '+' operator in expressions.</p>
+            <p>Note: local variables are not shared with included pages (using the "include" statement).</p>
+            <p>Example:</p>
+            <pre>
+&lt;div id="start" class="page"&gt;
+  [[$myName="Inigo Montoya"]]
+  [[include("subpage")]]
+  &lt;p&gt;Hello. My name is [[$myName]]!&lt;/p&gt;
+&lt;/div&gt; 
+&lt;div id="subpage" class="page"&gt;
+  [[$myName="Westley"]]
+&lt;/div&gt;            
+            </pre>
+            <p>This will display "Hello. My name is Inigo Montoya.". The $myName local variable in subpage is completely independent of the $myName variable in start.</p>
+            <p>If you want to include quotation marks inside a string you must escape them with backslash ('\'). For example: "\"My dear Mr. Bennet,\" said his lady to him one day, \"have you heard that Netherfield Park is let at last?\"". Will result in the string:</p>
+            <p class="indented"><b>"My dear Mr. Bennet," said his lady to him one day, "have you heard that Netherfield Park is let at last?"</b></p>
+            [include("contents")]
+		</div> 
+        <div id="conditional" class="page">
+            <h2>Conditional Statements</h2>
+            <p>Variables are especially useful when you can change the content of a page based on their values. For this, you must use conditional statements.</p>
+            <p>The simplest conditional statements are written like this: [[if({expression})]]{body}[[end]]. {expression} can be any expression. If it resolves to true then the content of {body} will be processed. false, 0 and unset local variables are all treated as false, everything else is treated as true.</p>
+            <p>Example:</p>
+            <pre>
+var variables = [[
+  { name : "showDetail", value : new BooleanVariable(false) }
+]]; 
+
+...
+           
+&lt;div id="start" class="page"&gt;
+  &lt;p&gt;[[link("page2")]][[showDetail=false]]Show page 2 without detail[[end]]&lt;/p&gt;
+  &lt;p&gt;[[link("page2")]][[showDetail=true]]Show page 2 with detail[[end]]&lt;/p&gt;
+&lt;/div&gt;  
+&lt;div id="page2" class="page"&gt;
+  &lt;p&gt;Hello. My name is Inigo Montoya.&lt;/p&gt;
+  [[if(showDetail)]]
+    &lt;p&gt;You killed my father. Prepare to die.&lt;/p&gt;
+  [[end]]
+  &lt;p&gt;[[link("start")]]Go back to start[[end]]&lt;/p&gt;
+&lt;/div&gt;           
+            </pre>
+            <p>"You killed my father. Prepare to die." will only be displayed if the reader uses the second link to get to page2.</p>
+            <p>The [[else]] statement allows you to specify alternative content to process if the expression is false.</p>
+            <p>The following extends the skill points example from [link("usingVariables")]Using Variables[end].<p>
+            <pre>
+&lt;div id="start" class="page"&gt;
+  [[if(pointsRemaining greaterThan 0)]]
+    &lt;h2&gt;Distribute Your Skill Points&lt;/h2&gt;
+    &lt;p&gt;You have [[pointsRemaining]] points remaining&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Strength: [[strength]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[strength=strength+1]]add[[end]]&lt;/li&gt;
+      &lt;li&gt;Intelligence: [[intelligence]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[intelligence=intelligence+1]]add[[end]]&lt;/li&gt;
+      &lt;li&gt;Charisma: [[charisma]] - [[link("start")]][[pointsRemaining=pointsRemaining-1]][[charisma=charisma+1]]add[[end]]&lt;/li&gt;
+    &lt;/ul&gt;
+  [[else]]
+    &lt;h2&gt;You Have Distributed All Of Your Skill Points&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Strength: [[strength]]&lt;/li&gt;
+      &lt;li&gt;Intelligence: [[intelligence]]&lt;/li&gt;
+      &lt;li&gt;Charisma: [[charisma]]&lt;/li&gt;
+    &lt;/ul&gt;
+  [[end]]
+&lt;/div&gt;
+            </pre>
+            <p>Now the reader will be unable to use more than the 20 skill points they are given. Once pointsRemaining is reduced to 0 they will no longer see the links to increase their attributes.</p>
+            <p>Even more complex statements can be written using [[else if({expression})]] instead of [[else]]. This allows you to specify a second expression to be checked if the first one is false. You can chain as many "else if" statements as you like. StoryTeller will continue to check each expression until it finds one which evaluates to true. A chain of "else-if" statements can also be ended with an "else" statement which will define the content to process if all expressions evaluate to false.</p>
+            <p>Example</p>
+            <pre>
+&lt;div id="start" class="page"&gt;
+  [[$x=1]]
+  [[$y=2]]
+  [[$z=2]]
+  [[if($x equal $y)]]
+    [[$theValue=1]]
+  [[else if($x greaterThan $y)]]
+    [[$theValue=2]]
+  [[else if($y equal $z)]]
+    [[$theValue=3]] 
+  [[else if($x lessThan $z)]]
+    [[$theValue=4]]    
+  [[else]]
+    [[$theValue=5]]
+  [[end]]
+  &lt;p&gt;The Value is [[$theValue]]&lt;/p&gt;
+&lt;/div&gt;            
+            </pre>
+            <p>The first expression is false and so is the second. The third is true so $theValue is set to 3. StoryTeller then jumps to the [[end]] because it has found a true expression.</p>
+            [include("contents")]
+		</div>
+        <div id="randomness" class="page">
+          <h2>Randomness</h2>
+          <p>Using the features described so far, you can write stories which are completely deterministic. If the reader makes the same choices they will always get the same outcome. Adding some randomness allows you to make stories in which the reader can make the same choices and get a different outcome.</p>
+          <p>There are three random functions you can use. 
+          <ul>          
+            <li>"randomBoolean({probability})" is the simplest. It will randomly choose either true or false with the probability you choose. For example, randomBoolean(0.8) will have an 80% chance of returning true.</li>
+            <li>"randomNumber({minimum},{maximum})" will choose a random number in the range {maximum} to {maximum}. The minimum is inclusive but the maximum is exclusive. That means that randomNumber(10,100) can return 10 but will not return 100 (It can return numbers very close too 100, such as 99.9999)</li>
+            <li>"randomInteger({minimum},{maximum})" will choose a random whole number in the range {maximum} to {maximum}. As for randomNumber, the minimum is inclusive but the maximum is exclusive. randomInteger(5,10) will return 5, 6, 7, 8 or 9.</li>
+          </ul>
+          <p>Example:</p>
+          <pre>
+&lt;div id="start" class="page"&gt;
+  [[if(randomBoolean(0.5))]]
+    &lt;p&gt;Sometimes the reader will see this.&lt;/p&gt;
+  [[else]]
+    &lt;p&gt;Other times they will see this.&lt;/p&gt;
+  [[end]]  
+&lt;/div&gt;
+          </pre>
+            [if(detail)]
+                <p><i>The following might get slightly technical. It's not that important and you can skip it if you like.</i> [link("randomness")][detail=false]Click here to hide the technical stuff.[end]</p>
+                <p>The values generated by these functions aren't actually random. They are generated by a function which appears random if you don't know its internal state. This internal state is stored in the address bar along with your variables. This state is initialised from the browser's random number generator when the story is opened.</p>
+                <p>This means that the outcomes are actually all decided when the reader opens the story and are saved when they bookmark a location within it. In order to get a new sequence of random events you need to clear the state by removing the hash ('#') and everything after it from the address bar (and then hitting enter to reload).</p>
+                <p>If you want to build the ability to reset into your stories then use [[reset()]]{body}[[end]] to create a link which will reset the story when the reader clicks it.</p>
+            [else]
+                <p><i>There are some slightly technical details hidden here. You don't really need to read it.</i> [link("randomness")][detail=true]Click here to show the technical stuff.[end]</p>
+            [end]
+            [include("contents")]
+        </div>
+        <div id="pageFunctions" class="page">
+            <h2>Page Functions</h2>
+            <p>StoryTeller can tell you what page the reader is currently on. The function "currentPage()" will return the pageId of the currently displayed page. "currentPageNumber()" will return an integer which identifies the current page.</p>
+            <p>These functions may not sound especially useful. If you're writing the page you already know what page it is. However, remember that it is possible to include sub-pages in a page. You can use currentPage() within the sub-page to determine which page it is included within.</p>
+            <p>This document uses such a technique in the menu at the bottom of each page. The menu is defined as a sub-page and included in each page. It does not display a link to the page you are already on.</p>
+            <p>The following is an excerpt from the menu sub-page:</p>
+            <pre>
+[[if(currentPage() equal "start")]]&lt;b&gt;Introduction&lt;/b&gt;[[else]][[link("start")]]Introduction[[end]][[end]]
+            </pre>
+            <p>Using currentPageNumber() you can get an identifier for the current page which can be stored in an IntegerVariable (It can also be stored in a NumberVariable but that will take up more space.). This requires you to know how many pages your story has (or at least an upper limit) in order to declare the IntegerVariable. To avoid this there is a fake variable type you can use. You can define a variable as PageNumberVariable({pageId}) and StoryTeller will automatically convert it to the right size IntegerVariable based on the number of pages in your story. {pageId} is optional. It is the pageId which page this variable will initially point to. If it is omitted then the start page is used.</p>
+            <p>Example:</p>
+            <pre>
+var variables = [[
+  { name : "pageNumberA", value : new PageNumberVariable() },
+  { name : "pageNumberB", value : new PageNumberVariable("page2") }
+]];         
+            </pre>
+            <p>Both "link" and "include" can use these numeric identifiers in place of the page's id. This allows you to save a page identifier and then use it later to link back to a remembered page.</p>
+            <p>Example:</p>
+            <pre>
+&lt;div id="history" class="page"&gt;
+  [[link(previousPage)]]back[[end]]
+  [[previousPage=currentPageNumber()]]
+&lt;/div&gt;            
+            </pre>
+            <p>This will provide a link back to the last page the reader saw and then update previousPage to point to the current page.</p>
+        </div>
+        <div id="customFunctions" class="page">
+            <h2>Custom Functions</h2>
+            <p>If you have complex logic to include in your story you can define your own functions using JavaScript. Functions are defined in a similar way to variables, in a script block (it can be the same script block in which the variables are defined.)</p>
+            <p>Example:</p>
+            <pre>
+&ltscript type="text/javascript"&gt; 	
+  var functions = [[
+    { name : "ordinal", operation: function(n) {
+            switch(n%10) {
+                
+            }
+        } 
+    }
+  ]];		
+&lt;/script&gt;           
+            </pre>
             [include("contents")]
         </div>
 	</body>

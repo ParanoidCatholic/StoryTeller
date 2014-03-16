@@ -247,10 +247,24 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
-
+    
     function modulusExpression(leftOperand,rightOperand) {
         return {
             evaluate: function() {return visible(leftOperand.evaluate().value%rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function andExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value && rightOperand.evaluate().value);},        
+            assign: invalidAssignment
+        };
+    }
+    
+    function orExpression(leftOperand,rightOperand) {
+        return {
+            evaluate: function() {return visible(leftOperand.evaluate().value || rightOperand.evaluate().value);},        
             assign: invalidAssignment
         };
     }
@@ -298,17 +312,19 @@ function Compiler(variables, functions) {
     var rightBracket = {tokenType: TokenType.rightBracket};
     var separator = {tokenType: TokenType.separator};
     var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression};    
-    var equalOperator = {tokenType: TokenType.operator, precedence: 1, expression: equalExpression};
-    var notEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: notEqualExpression};
-    var lessThanOperator = {tokenType: TokenType.operator, precedence: 1, expression: lessThanExpression};
-    var lessThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: lessThanOrEqualExpression};
-    var greaterThanOperator = {tokenType: TokenType.operator, precedence: 1, expression: greaterThanExpression};
-    var greaterThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 1, expression: greaterThanOrEqualExpression};
-    var additionOperator = {tokenType: TokenType.operator, precedence: 2, expression: additionExpression};
-    var subtractionOperator = {tokenType: TokenType.operator, precedence: 2, expression: subtractionExpression};
-    var multiplicationOperator = {tokenType: TokenType.operator, precedence: 3, expression: multiplicationExpression};
-    var divisionOperator = {tokenType: TokenType.operator, precedence: 3, expression: divisionExpression};
-    var modulusOperator = {tokenType: TokenType.operator, precedence: 3, expression: modulusExpression};
+    var andOperator = {tokenType: TokenType.operator, precedence: 1, expression: andExpression};
+    var orOperator = {tokenType: TokenType.operator, precedence: 1, expression: orExpression};
+    var equalOperator = {tokenType: TokenType.operator, precedence: 2, expression: equalExpression};
+    var notEqualOperator = {tokenType: TokenType.operator, precedence: 2, expression: notEqualExpression};
+    var lessThanOperator = {tokenType: TokenType.operator, precedence: 2, expression: lessThanExpression};
+    var lessThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 2, expression: lessThanOrEqualExpression};
+    var greaterThanOperator = {tokenType: TokenType.operator, precedence: 2, expression: greaterThanExpression};
+    var greaterThanOrEqualOperator = {tokenType: TokenType.operator, precedence: 2, expression: greaterThanOrEqualExpression};
+    var additionOperator = {tokenType: TokenType.operator, precedence: 3, expression: additionExpression};
+    var subtractionOperator = {tokenType: TokenType.operator, precedence: 3, expression: subtractionExpression};
+    var multiplicationOperator = {tokenType: TokenType.operator, precedence: 4, expression: multiplicationExpression};
+    var divisionOperator = {tokenType: TokenType.operator, precedence: 4, expression: divisionExpression};
+    var modulusOperator = {tokenType: TokenType.operator, precedence: 4, expression: modulusExpression};
     var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression};
     var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression};
 
@@ -337,7 +353,9 @@ function Compiler(variables, functions) {
         "-" : subtractionOperator,    
         "*" : multiplicationOperator,
         "/" : divisionOperator,
-        "%" : modulusOperator
+        "%" : modulusOperator,
+        "and" : andOperator,
+        "or" : orOperator
     };
 
     symbols[ContextMode.incomplete] = symbols[ContextMode.start];
@@ -356,28 +374,45 @@ function Compiler(variables, functions) {
         "lessThanOrEqual": true,
         "greaterThan": true,
         "greaterThanOrEqual": true,
+        "and": true,
+        "or": true,
         "true": true,
         "false": true
     };
     
 	var funcs = {};
     
-    for(var i=0; i<functions.length; i++) {
-        var funcDef = functions[i];
-		if(funcDef.blockFunction) {
-			funcs[funcDef.name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation}
-		} else {
-			funcs[funcDef.name] = {tokenType: TokenType.func, operation: funcDef.operation}
-		}
+    if(functions && functions.length) {
+        for(var i=0; i<functions.length; i++) {
+            var funcDef = functions[i];
+            var name = funcDef.name;
+            if(funcs[name]) {
+                throw Error(stringFormat("Duplicate function name '{0}'",[name]));
+            }
+            if(!identifierRegex.test(name) || reserved[name]) {
+                throw Error(stringFormat("Illegal function name '{0}'",[name]));
+            }
+            if(funcDef.blockFunction) {
+                funcs[name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation}
+            } else {
+                funcs[name] = {tokenType: TokenType.func, operation: funcDef.operation}
+            }
+        }
     }
     
     var globals = {};
 
-    if(variables) {
+    if(variables && variables.length) {
         for(var i=0; i<variables.length; i++) {        
             var variable = variables[i];
             var name = variable.name;
-            if(!identifierRegex.test(name) || reserved[name] || funcs[name]) {
+            if(globals[name]) {
+                throw Error(stringFormat("Duplicate variable name '{0}'",[name]));
+            }
+            if(funcs[name]) {
+                throw Error(stringFormat("Variable name already used as function name '{0}'",[name]));
+            }
+            if(!identifierRegex.test(name) || reserved[name]) {
                 throw Error(stringFormat("Illegal variable name '{0}'",[name]));
             }
             globals[name] = {tokenType: TokenType.variable, value: variable.value};

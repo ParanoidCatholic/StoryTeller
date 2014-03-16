@@ -1,4 +1,12 @@
-function StoryTeller(variables) {
+function PageNumberVariable(pageId) {
+    this.isPageNumber = true;
+    this.pageId = pageId;
+}
+
+var variables;
+var functions;
+
+function StoryTeller(variables, userFunctions) {
 	   
     var _root = null;
                     
@@ -46,34 +54,53 @@ function StoryTeller(variables) {
     if(_pages.index["start"]) {
         _startPage = _pages.index["start"];
     }
-		
-    var _pageId = new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
+	
+    function createPageNumberVariable(pageId) {
+        var page;        
+        if(pageId) {
+            if(!(pageId in _pages.index)) {
+                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+            }
+            page = _pages.index[pageId];
+        } else {
+            page = _startPage;
+        }
+        return new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
+    }
+	
+    var _pageId = createPageNumberVariable();
         
     var _stateContents = [_pageId, random];
     
     if(variables) {            
         for(var i=0; i<variables.length; i++) {
+            if(variables[i].isPageNumberVariable) {
+                variables[i] = createPageNumberVariable(variables[i].pageId);
+            }            
             _stateContents.push(variables[i].value);
         }
     }
         
-    function makeLink(block, pageNameExpression) {
+    function makeLink(block, pageIdentifierExpression) {
         
-        var pageName = pageNameExpression.evaluate();
-                
-        if(!(pageName in _pages.index)) {
-            throw new Error(stringFormat("Page not found: {0}", [pageName]));
-        }
-    
+        var pageIdentifier = pageIdentifierExpression.evaluate();
+        
         var backup = _state.toBase64();
-                
-        _pageId.set(_pages.index[pageName]);
+        
+        if(typeof(pageIdentifier) == "number") {
+            _pageId.set(pageIdentifier);
+        } else {
+            if(!(pageIdentifier in _pages.index)) {
+                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+            }
+            _pageId.set(_pages.index[pageIdentifier]);
+        }
         
         var bodyBuilder = new StringBuilder();
         block.execute(bodyBuilder);
                 
 		var resultBuilder = new StringBuilder();
-		resultBuilder.append('<a href=\"#');
+		resultBuilder.append('<a href="#');
 		resultBuilder.append(_state.toBase64());
 		resultBuilder.append('">');
 		resultBuilder.append(bodyBuilder.getValue());
@@ -83,12 +110,29 @@ function StoryTeller(variables) {
         
 		return resultBuilder.getValue();
     }
+    
+    function resetLink(block) {                                
+        var bodyBuilder = new StringBuilder();
+        block.execute(bodyBuilder);
+                
+		var resultBuilder = new StringBuilder();
+		resultBuilder.append('<a href="#" onclick="window.location.hash = \'\';window.location.reload(true);">');
+		resultBuilder.append(bodyBuilder.getValue());
+		resultBuilder.append('</a>');
+                
+		return resultBuilder.getValue();
+    }
     	
-	function includePage(pageName) {
-		if(!(pageName in _pages.index)) {
-            throw new Error(stringFormat("Page not found: {0}", [pageName]));
+	function includePage(pageIdentifier) {
+    
+        if(typeof(pageIdentifier) == "number") {
+            var pageId = pageIdentifier;
+        } else {
+            if(!(pageIdentifier in _pages.index)) {
+                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+            }
+            var pageId = _pages.index[pageIdentifier];
         }
-		var pageId = _pages.index[pageName];
         
         try {
             var compiled = _compiler.compile(_pages.contents[pageId].body);	
@@ -96,7 +140,7 @@ function StoryTeller(variables) {
             compiled.execute(subPageBuilder);
             return subPageBuilder.getValue();
         } catch (error) {
-            throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageName, error.message]));
+            throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageIdentifier, error.message]));
         }
 	}
            
@@ -105,30 +149,45 @@ function StoryTeller(variables) {
         {name: "randomNumber", operation: random.getNumber.bind(random)},
         {name: "randomBoolean", operation: random.getBoolean.bind(random)},
         {name: "currentPage", operation: function() {return _pages.contents[_pageId.get()].name;}},
+        {name: "currentPageNumber", operation: function() {return _pageId.get();}},
 		{name: "include", operation: includePage},
-		{name: "link", operation: makeLink, blockFunction: true}
+		{name: "link", operation: makeLink, blockFunction: true},
+        {name: "reset", operation: resetLink, blockFunction: true}
     ];
+    
+    if(userFunctions && userFunctions.length) {
+        for(var i=0;i<userFunctions.length;i++) {
+            functions.push(userFunctions[i]);
+        }
+    }
 	        
     var _compiler = new Compiler(variables, functions);
     	        
-    function showPage() {        
-        
-		try {
-			var compiled = _compiler.compile(_pages.contents[_pageId.get()].body);	
-			var outputBuilder = new StringBuilder();
-        
-            compiled.execute(outputBuilder);
-            _root.innerHTML = outputBuilder.getValue();
-        } catch (error) {
-            console.log(stringFormat("Error in page '{0}'\n{1}",[_pages.contents[_pageId.get()].name,error.message]));
+    function showPage() {  
+        var page = _pages.contents[_pageId.get()];
+        if(page && page.body) {             
+            try {                
+                var compiled = _compiler.compile(page.body);	
+                var outputBuilder = new StringBuilder();
+            
+                compiled.execute(outputBuilder);
+                _root.innerHTML = outputBuilder.getValue();
+            } catch (error) {
+                console.log(stringFormat("Error in page '{0}'\n{1}",[page.name,error.message]));
+                _root.innerHTML = '<span class="error">An error has occurred.</span>'
+            }
+        } else {
+            console.log(stringFormat("Error. Page number {0} does not exist.",[_pageId.get()]));
             _root.innerHTML = '<span class="error">An error has occurred.</span>'
         }
+        
+        window.scroll(0,0);
     }
     
     var _state = new State(_stateContents, showPage);
 	showPage();
 }
 
-window.onload = function() {   		    
-	var storyTeller = new StoryTeller(variables);
+window.onload = function() {
+	var storyTeller = new StoryTeller(variables, functions);
 }
