@@ -96,14 +96,13 @@ function StoryTeller(variables, userFunctions) {
             _pageId.set(_pages.index[pageIdentifier]);
         }
         
-        var bodyBuilder = new StringBuilder();
-        block.execute(bodyBuilder);
+        var body = block.execute();
                 
 		var resultBuilder = new StringBuilder();
 		resultBuilder.append('<a href="#');
 		resultBuilder.append(_state.toBase64());
 		resultBuilder.append('">');
-		resultBuilder.append(bodyBuilder.getValue());
+		resultBuilder.append(body);
 		resultBuilder.append('</a>');
         
         _state.fromBase64(backup);
@@ -111,13 +110,13 @@ function StoryTeller(variables, userFunctions) {
 		return resultBuilder.getValue();
     }
     
-    function resetLink(block) {                                
-        var bodyBuilder = new StringBuilder();
-        block.execute(bodyBuilder);
+    function resetLink(block) {                  
+    
+        var body = block.execute();
                 
 		var resultBuilder = new StringBuilder();
 		resultBuilder.append('<a href="#" onclick="window.location.hash = \'\';window.location.reload(true);">');
-		resultBuilder.append(bodyBuilder.getValue());
+		resultBuilder.append(body);
 		resultBuilder.append('</a>');
                 
 		return resultBuilder.getValue();
@@ -136,9 +135,7 @@ function StoryTeller(variables, userFunctions) {
         
         try {
             var compiled = _compiler.compile(_pages.contents[pageId].body);	
-            var subPageBuilder = new StringBuilder();
-            compiled.execute(subPageBuilder);
-            return subPageBuilder.getValue();
+            return compiled.execute();
         } catch (error) {
             throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageIdentifier, error.message]));
         }
@@ -167,11 +164,8 @@ function StoryTeller(variables, userFunctions) {
         var page = _pages.contents[_pageId.get()];
         if(page && page.body) {             
             try {                
-                var compiled = _compiler.compile(page.body);	
-                var outputBuilder = new StringBuilder();
-            
-                compiled.execute(outputBuilder);
-                _root.innerHTML = outputBuilder.getValue();
+                var compiled = _compiler.compile(page.body);
+                _root.innerHTML = compiled.execute();
             } catch (error) {
                 console.log(stringFormat("Error in page '{0}'\n{1}",[page.name,error.message]));
                 _root.innerHTML = '<span class="error">An error has occurred.</span>'

@@ -59,17 +59,19 @@ function Compiler(variables, functions) {
             _lines.push(line);
         }
         
-        this.execute = function(outputBuilder) {   
+        this.execute = function() { 
+            var outputBuilder = new StringBuilder();
             for(var i=0;i<_lines.length;i++) {  
                 var line = _lines[i];
                 try{
-                    line.execute(outputBuilder);
+                    outputBuilder.append(line.execute());
                 } catch(error) {
                     if(line.source) {
                         throw new Error(stringFormat("Unable to execute statement '{0}':\n{1}", [line.source, error.message]));
                     }
                 } 
             }
+            return outputBuilder.getValue();
         }
     }
 
@@ -95,12 +97,11 @@ function Compiler(variables, functions) {
             _activeBlock.block.addLine(line);
         }
                         
-        this.execute = function(outputBuilder) {
+        this.execute = function() {
             for(var i=0;i<_blocks.length;i++) {
                 var block = _blocks[i];
                 if(block.condition == null || block.condition.evaluate().value) {
-                    block.block.execute(outputBuilder);
-                    return;
+                    return block.block.execute();
                 }
             }
         }
@@ -123,8 +124,8 @@ function Compiler(variables, functions) {
             _block.addLine(line);
         }
         
-        this.execute = function(outputBuilder) {
-			outputBuilder.append(func.apply(null, _parameters));
+        this.execute = function() {
+			return func.apply(null, _parameters);
         }
 	}
 	
@@ -545,18 +546,18 @@ function Compiler(variables, functions) {
     
     function htmlLine(html) {
         return {
-            execute: function(outputBuilder) {
-                outputBuilder.append(html);
+            execute: function() {
+                return html;
             }
         };
     }
 
     function expressionLine(expression, source) {
         return {
-            execute: function(outputBuilder) {
+            execute: function() {
                 var result = expression.evaluate();
                 if(result.output) {
-                    outputBuilder.append(result.value);
+                    return result.value;
                 }
             },
             source: source

@@ -3,7 +3,9 @@ function StringBuilder() {
     var _values = [];
     
     this.append = function (value) {
-        _values.push(value);
+        if(value) {
+            _values.push(value);
+        }        
     }
     
     this.getValue = function() {
