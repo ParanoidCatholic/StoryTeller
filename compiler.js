@@ -406,16 +406,18 @@ function Compiler(variables, functions) {
         for(var i=0; i<variables.length; i++) {        
             var variable = variables[i];
             var name = variable.name;
-            if(globals[name]) {
-                throw Error(stringFormat("Duplicate variable name '{0}'",[name]));
-            }
-            if(funcs[name]) {
-                throw Error(stringFormat("Variable name already used as function name '{0}'",[name]));
-            }
-            if(!identifierRegex.test(name) || reserved[name]) {
-                throw Error(stringFormat("Illegal variable name '{0}'",[name]));
-            }
-            globals[name] = {tokenType: TokenType.variable, value: variable.value};
+			if(name) {
+				if(globals[name]) {
+					throw Error(stringFormat("Duplicate variable name '{0}'",[name]));
+				}
+				if(funcs[name]) {
+					throw Error(stringFormat("Variable name already used as function name '{0}'",[name]));
+				}
+				if(!identifierRegex.test(name) || reserved[name]) {
+					throw Error(stringFormat("Illegal variable name '{0}'",[name]));
+				}
+				globals[name] = {tokenType: TokenType.variable, value: variable.value};
+			}
         }
     }
 			

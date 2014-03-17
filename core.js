@@ -72,7 +72,7 @@ function StoryTeller(variables, userFunctions) {
         
     var _stateContents = [_pageId, random];
     
-    if(variables) {            
+    if(variables && variables.length) {            
         for(var i=0; i<variables.length; i++) {
             if(variables[i].isPageNumberVariable) {
                 variables[i] = createPageNumberVariable(variables[i].pageId);

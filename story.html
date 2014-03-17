@@ -45,6 +45,7 @@ var variables = [
                 <li>[if(currentPage() equal "localVariables")]<b>Local Variables</b>[else][link("localVariables")]Local Variables[end][end]</li>
                 <li>[if(currentPage() equal "conditional")]<b>Conditional Statements</b>[else][link("conditional")]Conditional Statements[end][end]</li>
                 <li>[if(currentPage() equal "randomness")]<b>Randomness</b>[else][link("randomness")]Randomness[end][end]</li>
+				<li>[if(currentPage() equal "customFunctions")]<b>Custom Functions</b>[else][link("customFunctions")]Custom Functions[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -440,17 +441,59 @@ var variables = [[
             <p>If you have complex logic to include in your story you can define your own functions using JavaScript. Functions are defined in a similar way to variables, in a script block (it can be the same script block in which the variables are defined.)</p>
             <p>Example:</p>
             <pre>
-&ltscript type="text/javascript"&gt; 	
-  var functions = [[
-    { name : "ordinal", operation: function(n) {
-            switch(n%10) {
-                
-            }
-        } 
+function integerToOrdinal(n) {
+  if(Math.floor(n/10)%10!=1) {
+    switch(n%10) {
+	  case 1:
+	    return n + "st";
+	  case 2:
+	    return n + "nd";
+	  case 3:
+	    return n + "rd"
     }
-  ]];		
-&lt;/script&gt;           
+  }
+  return n + "th"
+}	
+			
+var functions = [[
+  { name : "ordinal", operation: integerToOrdinal}
+]];           
             </pre>
+			<p>This will define a function called "ordinal" which converts an integer (1, 2, 3) to an ordinal string (1st, 2nd, 3rd).</p>
+			<p>You can then use this function in your pages:</p>
+			<pre>
+&lt;div id="finishLine" class="page"&gt;
+  "Congratualtions." an official says as you cross the finish line. "You're [[ordinal(place)]]"
+&lt;/div&gt;
+			</pre>
+			<p>When you are defining your own functions it is important to remember only variables which are defined in the "varaibles" array will be managed by StroyTeller. If you use global variables which are not managed by StoryTeller then your story will have unexpected behavior when if the reader uses the browser's back button or attempts to return to a bookmarked location.</p>
+			<p>To access your variables, keep a reference the object in the variable's "value" property and use its .get() and .set({value}) methods in your function.</p>
+			<p>Example:</p>
+			<pre>
+var globalNumber = new NumberVariable(0);
+
+var variables = [[
+  { name : "myNumber", value : globalNumber }
+]]; 
+
+function multiplyGlobalNumberBy(x) {
+	var temp = globalNumber.get() * x;
+	globalNumber.set(temp);
+}
+
+var functions = [[
+  { name : "multiplyMyNumber", operation: multiplyGlobalNumberBy}
+]];           
+			</pre>
+			<p>If you need to maintain a value for use in your functions but have no use for it in the pages of your story you can simply not give it a name.</p>
+			<p>Example:</p>
+			<pre>
+var globalNumber = new NumberVariable(0);
+
+var variables = [[
+  { value : globalNumber }
+]];     
+			</pre>			
             [include("contents")]
         </div>
 	</body>
