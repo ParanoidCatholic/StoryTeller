@@ -47,6 +47,7 @@ var variables = [
                 <li>[if(currentPage() equal "randomness")]<b>Randomness</b>[else][link("randomness")]Randomness[end][end]</li>
 				<li>[if(currentPage() equal "customFunctions")]<b>Custom Functions</b>[else][link("customFunctions")]Custom Functions[end][end]</li>
                 <li>[if(currentPage() equal "blockFunctions")]<b>Block Functions</b>[else][link("blockFunctions")]Block Functions[end][end]</li>
+				<li>[if(currentPage() equal "customVariables")]<b>Custom Variables</b>[else][link("customVariables")]Custom Variables[end][end]</li>
             </ol>
         </div>
         <div id="start" class="page">
@@ -74,6 +75,24 @@ var variables = [
   &lt;/body&gt;
 &lt;/html&gt;                
             </pre>            
+			<p>When you distribute your story, you will need to include "storyteller.js" with it. If you want your story to be completely self-contained, you can copy the content of storyteller.js into the &lt;script&gt; element and remove 'src="storyteller.js"':</p>
+			<pre>
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      .page {display: none;}
+      .error {color: #FF0000;}
+    &lt;/style&gt;        
+    &lt;script type="text/javascript"&gt;
+      {Replace this with the content of storyteller.js}
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;    
+    &lt;div id="start" class="page"&gt;    
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;  			
+			</pre>
             [include("contents")]
         </div> 
         <div id="pages" class="page">
@@ -494,12 +513,99 @@ var globalNumber = new NumberVariable(0);
 var variables = [[
   { value : globalNumber }
 ]];     
-			</pre>			
+			</pre>		
+			<p>StoryTeller uses its own random number generator which ensures the random events in a page are the same when the reader returns to some point in the story either via the back button or a bookmark. This means that you should not use JavaScript's built-in random number generator (Math.random()). Instead, use the methods provided by StoryTeller's "random" object.</p>
+			<ul>
+				<li>random.getByte(). Returns a random byte (unsigned 8-bit integer).</li>
+				<li>random.getDouble(). Returns a random number in the range [[0,1).</li>
+				<li>random.getBoolean({probability}). Returns either true or false. {probability} is the probability that the reult will be true.</li>
+				<li>random.getNumber({min},{max}). Returns a random number in the range [[{min},{max}).</li>
+				<li>random.getInteger({min},{max}). Returns a random integer in the range [[{min},{max}).</li>
+			</ul>
             [include("contents")]
         </div>
         <div id="blockFunctions" class="page">
             <h2>Block Functions</h2>
+			<p>For more complex custom behaviors you can use block functions. These have two important differences from normal custom functions.</p>
+			<p>Firstly, these functions take a block of HTML and StoryTeller statements as one of their parameters. When they are used, the start of this block is indicated by the function name and the end is indicated by [[end]].</p>
+			<p>Example:</p>
+			<pre>
+[[myBlockFunction($myVariable)]]
+	&lt;p&gt;This is the block&lt;/p&gt;
+	[[if(showDetail)]]&lt;p&gt;The block can include StoryTeller statements&lt;/p&gt;[[end]]
+[[end]]
+			</pre>
+			<p>Secondly, the parameters are not evaluated before passing them to your function. You decide if, when and even how many times the block is executed and the parameters are evaluated. To execute the block, call its .execute() function. The text it produces will be returned. To evaluate the other parameters, use their .evaluate() method.</p>
+			<p>The block is passed to your function as its first parameters, then the normal parameters follow.</p>
+			<p>The following example defines a block function which will act like a for loop:</p>
+			<pre>
+function forLoop(block, init, condition, update) {
+	init.evaluate();
+	
+	var body = "";
+	
+	while(condition.evaluate()) {
+		body += block.execute();
+		update.execute();
+	}
+	
+	return body;
+}
+
+var functions = [[
+  { name : "for", operation: forLoop}
+]];   
+			</pre>
+			<p>You can then use it in your pages like this:</p>
+			<pre>
+&lt;p&gt;The coundown started.&lt;/p&gt;
+[[for($i=10,$i greaterThanOrEqual 0,$i=$i-1)]]
+	&lt;p>"[[$i]]"&lt;/p&gt;
+[[end]]
+&lt;p&gt;"Blast Off!"&lt;/p&gt;
+			</pre>
+			<p>You can also assign values to the parameters with their .assign({value}) method.</p>
+			<p>Example:</p>
+			<pre>
+function forEachCharacter(block, name, greeting) {	
+	var body = "";
+	
+	var names = [["James", "Ben", "David"]];
+	var greetings = [["Hi", "Hey", "Hello"]];
+	
+	for(var i=0;i&lt;names.length;i++) {
+		name.assign(names[[i]]);
+		greeting.assign(greetings[[i]]);
+		body += block.execute();
+	}
+	
+	return body;
+}
+
+var functions = [[
+  { name : "forEachCharacter", operation: forEachCharacter}
+]];
+
+...
+
+&lt;div id="start" class="page"&gt;
+  &lt;p&gt;As you walk into the room, your friends greet you.&lt;/p&gt;
+  [[forEachCharacter($name, $greeting)]]
+	&lt;p&gt;[[$name]] says "[[$greeting]]"&lt;/p&gt;
+  [[end]]
+&lt;/div&gt;
+			</pre>
+			<p>This will execute the block once for each pair of $name and $greeting, producing:</p>
+			<pre>
+&lt;p&gt;As you walk into the room, your friends greet you.&lt;/p&gt;	
+&lt;p&gt;James says "Hi"&lt;/p&gt;
+&lt;p&gt;Ben says "Hey"&lt;/p&gt;
+&lt;p&gt;David says "Hello"&lt;/p&gt;		
+			</pre>
             [include("contents")]
         </div>
+		<div id="customVariables" class="page">
+            <h2>Custom Variable Types</h2>
+		</div>
 	</body>
 </html>
