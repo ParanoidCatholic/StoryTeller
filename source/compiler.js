@@ -106,7 +106,12 @@ function Compiler(variables, functions) {
             }
         }
     }
-	        
+	
+    function FunctionBlockParameter(parameter) {
+        this.evaluate = function(){return parameter.evaluate().value;};
+        this.assign = parameter.assign.bind(parameter);
+    }
+    
 	function FunctionBlock(func, parameters) {
 		var _block = new CodeBlock();
 		
@@ -114,12 +119,9 @@ function Compiler(variables, functions) {
 		
         for(var i=0;i<parameters.length;i++) {
             var parameter = parameters[i];
-            _parameters.push({
-                evaluate: function(){return parameter.evaluate().value;},
-                assign: parameter.assign.bind(parameter)
-            });
+            _parameters.push(new FunctionBlockParameter(parameter));
         }
-        		
+                		
         this.addLine = function(line) {
             _block.addLine(line);
         }

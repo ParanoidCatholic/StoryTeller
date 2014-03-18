@@ -1,0 +1,111 @@
+<html>
+	<head>
+		<title>StoryTeller Test</title>
+		<style>
+.page {	display: none;}
+.error {color: #FF0000;}
+		</style>        
+        <script type="text/javascript"  src="util.js"></script>
+        <script type="text/javascript"  src="types.js"></script>
+        <script type="text/javascript"  src="random.js"></script>
+        <script type="text/javascript"  src="base64.js"></script>
+        <script type="text/javascript"  src="state.js"></script>
+		<script type="text/javascript"  src="compiler.js"></script>
+		<script type="text/javascript"  src="core.js"></script>
+		<script type="text/javascript">
+var coordinates = {
+  x : 0,
+  y : 0,
+  
+  size : function() {return 20;},
+  
+  toInt16Array : function() {
+   var ints = [[]];
+   ints[[0]] = (this.x & 0x03FF) | ((this.y & 0x003F) << 10);
+   ints[[1]] = (this.y & 0x03FF) >> 6;
+   return ints;
+  },
+  
+  fromInt16Array : function(ints) {
+    this.x = ints[[0]] & 0x03FF;
+    this.y = (ints[[0]] >> 10) | (ints[[1]] << 6);
+  }
+}        
+        
+var variables = [
+    { name : "boolean", value : new BooleanVariable(false) },
+    { name : "number", value : new NumberVariable(3.14159) },    
+    { name : "integer1", value : new IntegerVariable(0, 65536, 0, false) },
+    { name : "integer2", value : new IntegerVariable(-10, 10, 0, true) },
+    { value : coordinates }
+];
+
+function setCoordinates(x,y) {
+    coordinates.x = x;
+    coordinates.y = y;
+}
+
+function coordinatesString() {
+    return "(" + coordinates.x + ", " + coordinates.y + ")";
+}
+
+function forCount(block, item, from, to) {
+
+    var body = "";
+            
+    for(var i=from.evaluate();i<=to.evaluate();i++) {
+        item.assign(i);
+        body += block.execute();
+    }
+    return body;
+}
+
+var functions = [
+    { name: "setCoords", operation: setCoordinates },
+    { name: "getCoords", operation: coordinatesString },
+    { name: "for", operation: forCount, blockFunction: true}
+];
+		</script>
+	</head>
+	<body>    
+        <div class="page" id="start">
+            <h1>Page 1</h1>            
+            <p>[boolean]</p>
+            <p>[number]</p>
+            <p>[integer1]</p>
+            <p>[integer2]</p>
+            <p>[getCoords()]</p>
+            [boolean=true][number=2.71828][integer1=65536]
+            [link("page2")][integer2=-7][setCoords(256,193)]to Page 2[end]
+            [include("subpage")]
+            <ol>
+            [for($a,1,20)]
+                <li>[$a]</li>
+            [end]
+            <ol>
+            [$b=7]
+            [if($b equal 7]<p>YES</p>[end]
+            [if($b equal 8]<p>NO</p>[end]
+            [if($b notEqual 8]<p>YES</p>[end]
+            [if($b notEqual 7]<p>NO</p>[end]
+            [if($b lessThan 8]<p>YES</p>[else]<p>NO</p>[end]
+            [if($b lessThan 7]<p>NO</p>[else]<p>YES</p>[end]
+        </div>
+        <div class="page" id="page2">
+            <h1>Page 2</h1>
+            <p>[boolean]</p>
+            <p>[number]</p>
+            <p>[integer1]</p>
+            <p>[integer2]</p>
+            <p>[getCoords()]</p>
+        </div>
+        <div class="page" id="subpage">
+            <h2>Sub-Page</h2>
+            <p>[boolean]</p>
+            <p>[number]</p>
+            <p>[integer1]</p>
+            <p>[integer2]</p>
+            <p>[getCoords()]</p>
+        </div>
+	</body>
+</html>

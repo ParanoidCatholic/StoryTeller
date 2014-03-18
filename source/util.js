@@ -3,7 +3,7 @@ function StringBuilder() {
     var _values = [];
     
     this.append = function (value) {
-        if(value) {
+        if(value!=null) {
             _values.push(value);
         }        
     }
