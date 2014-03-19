@@ -5,13 +5,13 @@
 .page {	display: none;}
 .error {color: #FF0000;}
 		</style>        
-        <script type="text/javascript"  src="util.js"></script>
-        <script type="text/javascript"  src="types.js"></script>
-        <script type="text/javascript"  src="random.js"></script>
-        <script type="text/javascript"  src="base64.js"></script>
-        <script type="text/javascript"  src="state.js"></script>
-		<script type="text/javascript"  src="compiler.js"></script>
-		<script type="text/javascript"  src="core.js"></script>
+        <script type="text/javascript"  src="../source/util.js"></script>
+        <script type="text/javascript"  src="../source/types.js"></script>
+        <script type="text/javascript"  src="../source/random.js"></script>
+        <script type="text/javascript"  src="../source/base64.js"></script>
+        <script type="text/javascript"  src="../source/state.js"></script>
+		<script type="text/javascript"  src="../source/compiler.js"></script>
+		<script type="text/javascript"  src="../source/core.js"></script>
 		<script type="text/javascript">
 var coordinates = {
   x : 0,
@@ -82,7 +82,7 @@ var functions = [
             [for($a,1,20)]
                 <li>[$a]</li>
             [end]
-            <ol>
+            </ol>
             [$b=7]
             [if($b equal 7]<p>YES</p>[end]
             [if($b equal 8]<p>NO</p>[end]
@@ -90,6 +90,22 @@ var functions = [
             [if($b notEqual 7]<p>NO</p>[end]
             [if($b lessThan 8]<p>YES</p>[else]<p>NO</p>[end]
             [if($b lessThan 7]<p>NO</p>[else]<p>YES</p>[end]
+			[if($b lessThanOrEqual 6]<p>NO</p>[else if($b lessThanOrEqual 7)]<p>YES</p>[else]<p>NO</p>[end]
+			[if($b greaterThan 7]<p>NO</p>[else if($b greaterThan 6)]<p>YES</p>[else]<p>NO</p>[end]
+			[if($b greaterThanOrEqual 7]<p>YES</p>[else if($b greaterThanOrEqual 6)]<p>NO</p>[else]<p>NO</p>[end]
+			[if(not($b lessThan 8)]<p>NO</p>[else]<p>YES</p>[end]
+			<p>[1+2]</p>
+			<p>[7-3]</p>
+			<p>[5*9]</p>
+			<p>[4/3]</p>
+			<p>[integer2=-1][integer2]</p>
+			<p>[integer2=-integer2][integer2]</p>
+			<p>[1+6/2-8*0.25]</p>
+			<p>[2*(7-1)/3]</p>
+			<hr/>
+			<p>[randomBoolean()]</p>
+			<p>[randomNumber()]</p>
+			<p>[randomInteger()]</p>
         </div>
         <div class="page" id="page2">
             <h1>Page 2</h1>
