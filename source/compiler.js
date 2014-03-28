@@ -287,19 +287,26 @@ function Compiler(variables, functions) {
     }
 
     function functionExpression(func,parameters) {
+		var evaluatedParameters;
+		if(parameters.items) {
+			evaluatedParameters = parameters.evaluate();
+		} else {
+			evaluatedParameters = [parameters.evaluate()];
+		}
         return {
             evaluate: function() {
-                evaluatedParameters = [];
-                for(var i=0;i<parameters.length;i++) {
-                    evaluatedParameters.push(parameters[i].evaluate().value)
-                }
-                return visible(func.apply(null,evaluatedParameters));                        
+                return visible(func.apply(null,parameters.evaluate()));                        
             },
             assign: invalidAssignment
         };
     }
 	
 	function blockFunctionExpression(func,parameters) {
+		if(parameters.items) {
+			parameters = parameters.items;
+		} else {
+			parameters = [parameters];
+		}
         return {
 			block: new FunctionBlock(func, parameters),
             evaluate: function() {
@@ -308,8 +315,30 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
-
-    var marker = {tokenType: TokenType.marker};
+	
+	function arrayExpression(items) {
+		return {
+			items: items, 
+			evaluate: function() {
+				var results = [];
+				for(var i=0;i<items.length;i++) {
+					results.push(items[i].evaluate().value);
+				}				
+				return invisible(results);
+            },
+			assign: function(value) {
+				var results = [];
+				if(!(value instanceof Array)) {
+					value = [value];
+				}
+				var n = Math.min(items.length,value.length);
+				for(var i=0;i<n;i++) {		
+					results.push(items[i].assign(value[i]));					
+				}
+				return invisible(results);
+			}
+		}
+	}
 
     var leftBracket = {tokenType: TokenType.leftBracket};
     var rightBracket = {tokenType: TokenType.rightBracket};
@@ -439,20 +468,12 @@ function Compiler(variables, functions) {
                     _stack.push(token.expression(operand));
                     break;
                 case TokenType.func:
-                    var parameters = [];
-                    var parameter;
-                    while((parameter=_stack.pop())) {
-                        parameters.push(parameter);
-                    }
-                    _stack.push(functionExpression(token.operation,parameters.reverse()));                
+                    var parameters = _stack.pop();
+                    _stack.push(functionExpression(token.operation,parameters));                
                     break;
 				case TokenType.blockFunc:
-                    var parameters = [];
-                    var parameter;
-                    while((parameter=_stack.pop())) {
-                        parameters.push(parameter);
-                    }
-                    _stack.push(blockFunctionExpression(token.operation,parameters.reverse()));
+                    var parameters = _stack.pop();
+                    _stack.push(blockFunctionExpression(token.operation,parameters));
                     break;
                 case TokenType.literal:
                     _stack.push(literalExpression(token.value));
@@ -460,8 +481,19 @@ function Compiler(variables, functions) {
                 case TokenType.variable:
                     _stack.push(variableExpression(token.value));
                     break;
-                case TokenType.marker:
+                case TokenType.leftBracket:
                     _stack.push(null);
+				case TokenType.rightBracket:
+					var items = [];
+                    var item;
+                    while((item=_stack.pop())) {
+                        items.push(item);
+                    }
+					if(items.length==1) {
+						_stack.push(items[0]);
+					} else {
+						_stack.push(arrayExpression(items.reverse));
+					}
             }
         }
         
@@ -503,12 +535,14 @@ function Compiler(variables, functions) {
             switch(token.tokenType) {            
                 case TokenType.leftBracket:
                     _stack.push(token);
+					_builder.addToken(token);
                     break;
                 case TokenType.rightBracket:
                     while(!topTokenTypeIs([TokenType.leftBracket])) {
                         _builder.addToken(_stack.pop());
                     }
                     _stack.pop();
+					_builder.addToken(token);
                     if(topTokenTypeIs([TokenType.func, TokenType.blockFunc])) {
                         _builder.addToken(_stack.pop());
                     }
@@ -530,7 +564,6 @@ function Compiler(variables, functions) {
                 case TokenType.func:
 				case TokenType.blockFunc:
                     _stack.push(token);
-                    _builder.addToken(marker);
                     break;
                 default:    
                     _builder.addToken(token);
