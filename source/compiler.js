@@ -287,58 +287,65 @@ function Compiler(variables, functions) {
     }
 
     function functionExpression(func,parameters) {
-		var evaluatedParameters;
-		if(parameters.items) {
-			evaluatedParameters = parameters.evaluate();
-		} else {
-			evaluatedParameters = [parameters.evaluate()];
-		}
         return {
             evaluate: function() {
-                return visible(func.apply(null,parameters.evaluate()));                        
+                evaluatedParameters = parameters.evaluate().value;
+                var parameterArray;
+                if(parameters.items) {
+                    parameterArray = evaluatedParameters;
+                } else {
+                    parameterArray = [evaluatedParameters];
+                }
+                return visible(func.apply(null,parameterArray));                        
             },
             assign: invalidAssignment
         };
     }
 	
 	function blockFunctionExpression(func,parameters) {
-		if(parameters.items) {
-			parameters = parameters.items;
-		} else {
-			parameters = [parameters];
-		}
+        var parameterArray;
+        if(parameters.items) {
+            parameterArray = parameters.items;
+        } else {
+            parameterArray = [parameters];
+        }
         return {
-			block: new FunctionBlock(func, parameters),
+			block: new FunctionBlock(func, parameterArray),
             evaluate: function() {
                 throw new Error("Block functions cannot be evaluated in a statement.");                       
             },
             assign: invalidAssignment
         };
     }
-	
-	function arrayExpression(items) {
-		return {
-			items: items, 
-			evaluate: function() {
-				var results = [];
-				for(var i=0;i<items.length;i++) {
-					results.push(items[i].evaluate().value);
-				}				
-				return invisible(results);
+    
+    function arrayExpression(items) {
+        return {
+            items: items,
+            evaluate: function() {
+                result = [];
+                for(var i=0;i<items.length;i++) {
+                    result.push(items[i].evaluate().value)
+                }
+                return invisible(result);                        
             },
-			assign: function(value) {
-				var results = [];
-				if(!(value instanceof Array)) {
-					value = [value];
-				}
-				var n = Math.min(items.length,value.length);
-				for(var i=0;i<n;i++) {		
-					results.push(items[i].assign(value[i]));					
-				}
-				return invisible(results);
-			}
-		}
-	}
+            assign: function(value) {                
+                if(value instanceof Array) {                
+                    var n = Math.min(items.length, value.length);
+                    var result = [];
+                    for(var i=0;i<n;i++) {
+                        result.push(items[i].assign(value[i]));
+                    }
+                    return invisible(result);
+                } else if(items.length>0) {
+                        return invisible(items[0].assign(value));                
+                } else {
+                    return invisible([]);
+                }
+            }
+        }
+    }
+
+    var marker = {tokenType: TokenType.marker};
 
     var leftBracket = {tokenType: TokenType.leftBracket};
     var rightBracket = {tokenType: TokenType.rightBracket};
@@ -468,12 +475,10 @@ function Compiler(variables, functions) {
                     _stack.push(token.expression(operand));
                     break;
                 case TokenType.func:
-                    var parameters = _stack.pop();
-                    _stack.push(functionExpression(token.operation,parameters));                
+                    _stack.push(functionExpression(token.operation,_stack.pop()));                
                     break;
-				case TokenType.blockFunc:
-                    var parameters = _stack.pop();
-                    _stack.push(blockFunctionExpression(token.operation,parameters));
+				case TokenType.blockFunc:                    
+                    _stack.push(blockFunctionExpression(token.operation,_stack.pop()));
                     break;
                 case TokenType.literal:
                     _stack.push(literalExpression(token.value));
@@ -483,17 +488,18 @@ function Compiler(variables, functions) {
                     break;
                 case TokenType.leftBracket:
                     _stack.push(null);
-				case TokenType.rightBracket:
-					var items = [];
+                    break;
+                case TokenType.rightBracket:
+                    var items = [];
                     var item;
                     while((item=_stack.pop())) {
                         items.push(item);
                     }
-					if(items.length==1) {
-						_stack.push(items[0]);
-					} else {
-						_stack.push(arrayExpression(items.reverse));
-					}
+                    if(items.length==1) {
+                        _stack.push(items[0]);
+                    } else {
+                        _stack.push(arrayExpression (items.reverse()));
+                    }
             }
         }
         
@@ -535,14 +541,14 @@ function Compiler(variables, functions) {
             switch(token.tokenType) {            
                 case TokenType.leftBracket:
                     _stack.push(token);
-					_builder.addToken(token);
+                    _builder.addToken(token);
                     break;
                 case TokenType.rightBracket:
                     while(!topTokenTypeIs([TokenType.leftBracket])) {
                         _builder.addToken(_stack.pop());
                     }
                     _stack.pop();
-					_builder.addToken(token);
+                    _builder.addToken(token);
                     if(topTokenTypeIs([TokenType.func, TokenType.blockFunc])) {
                         _builder.addToken(_stack.pop());
                     }
