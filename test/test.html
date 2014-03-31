@@ -32,7 +32,7 @@ var coordinates = {
   }
 }        
         
-var variables = [
+variables = [
     { name : "boolean", value : new BooleanVariable(false) },
     { name : "number", value : new NumberVariable(3.14159) },    
     { name : "integer1", value : new IntegerVariable(0, 65536, 0, false) },
@@ -60,11 +60,33 @@ function forCount(block, item, from, to) {
     return body;
 }
 
-var functions = [
+functions = [
     { name: "setCoords", operation: setCoordinates },
     { name: "getCoords", operation: coordinatesString },
     { name: "for", operation: forCount, blockFunction: true}
 ];
+
+var people = new Set(
+    {name: "Brian", "surname": "Marshall"},
+    {name: "James", "surname": "Ward"},
+    {name: "Ben", "surname": "Graham"},
+    {name: "Declan", "surname": "Fernandez"},
+    {name: "David", "surname": "Watt"}    
+);
+
+var items = new Set(
+    {name: "rolling pin", "damage": 1},
+    {name: "plank", "damage": 3},
+    {name: "golf club", "damage": 6},
+    {name: "kitana", "damage": 10}
+);
+
+sets = [
+	{name: "people", set: people},
+	{name: "items", set: items}
+];
+
+relations = [ {name: "isHolding", relation = new Relation(people,items)];
 		</script>
 	</head>
 	<body>    
@@ -72,6 +94,7 @@ var functions = [
 			<p>[randomBoolean(0.5)]</p>
 			<p>[randomNumber(-1,1)]</p>
 			<p>[randomInteger(0,100)]</p>
+			<p>[reset()]reset[end]</p>
 			<hr/>
             <h1>Page 1</h1>            
             <p>[boolean]</p>

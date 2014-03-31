@@ -3,10 +3,12 @@ function PageNumberVariable(pageId) {
     this.pageId = pageId;
 }
 
-var variables;
-var functions;
+var variables = [];
+var functions = [];
+var sets = [];
+var relations = [];
 
-function StoryTeller(variables, userFunctions) {
+function StoryTeller(variables, userFunctions, sets, relations) {
 	   
     var _root = null;
                     
@@ -80,6 +82,12 @@ function StoryTeller(variables, userFunctions) {
             _stateContents.push(variables[i].value);
         }
     }
+	
+	if(relations && relations.length) {
+		for(var i=0; i<relations.length; i++) {          
+            _stateContents.push(relations[i].relation);
+        }
+	}
         
     function makeLink(block, pageIdentifierExpression) {
         
@@ -183,5 +191,5 @@ function StoryTeller(variables, userFunctions) {
 }
 
 window.onload = function() {
-	var storyTeller = new StoryTeller(variables, functions);
+	var storyTeller = new StoryTeller(variables, functions, sets, relations);
 }
