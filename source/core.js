@@ -165,7 +165,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             functions.push(userFunctions[i]);
         }
     }
-	        
+		
     var _compiler = new Compiler(variables, functions);
     	        
     function showPage() {  
