@@ -82,13 +82,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             _stateContents.push(variables[i].value);
         }
     }
-	
-	if(relations && relations.length) {
-		for(var i=0; i<relations.length; i++) {          
-            _stateContents.push(relations[i].relation);
-        }
-	}
-        
+		        
     function makeLink(block, pageIdentifierExpression) {
         
         var pageIdentifier = pageIdentifierExpression.evaluate();
@@ -165,6 +159,41 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             functions.push(userFunctions[i]);
         }
     }
+	
+	function relationResult(relation, keys) {
+        return {
+            get: function() {
+                return relation.check.apply(relation,keys);
+            },
+            
+            set: function(value) {
+				if(value) {
+					relation.set.apply(relation,keys);
+				} else {
+					relation.clear.apply(relation,keys);
+				}
+                return relation.check.apply(relation,keys);
+            }
+        };
+    }
+	
+	function relationFunction(name, relation) {
+		return {
+			name: name,
+			operation: function() {
+				return relationResult(relation, arguments);
+			},
+			propertyResult: true
+		};
+	}
+	
+	if(relations && relations.length) {
+		for(var i=0; i<relations.length; i++) {          
+			var definition = relations[i];
+            _stateContents.push(definition.relation);
+			functions.push(relationFunction(definition.name,definition.relation));
+        }
+	}
 		
     var _compiler = new Compiler(variables, functions);
     	        

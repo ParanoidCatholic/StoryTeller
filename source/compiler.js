@@ -302,6 +302,31 @@ function Compiler(variables, functions) {
         };
     }
 	
+	function propertyExpression(func,parameters) {
+        return {
+            evaluate: function() {
+                evaluatedParameters = parameters.evaluate().value;
+                var parameterArray;
+                if(parameters.items) {
+                    parameterArray = evaluatedParameters;
+                } else {
+                    parameterArray = [evaluatedParameters];
+                }
+                return visible(func.apply(null,parameterArray).get(););                        
+            },
+            assign: function(value) {
+                evaluatedParameters = parameters.evaluate().value;
+                var parameterArray;
+                if(parameters.items) {
+                    parameterArray = evaluatedParameters;
+                } else {
+                    parameterArray = [evaluatedParameters];
+                }
+                return visible(func.apply(null,parameterArray).set(value););                        
+            }
+        };
+    }
+	
 	function blockFunctionExpression(func,parameters) {
         var parameterArray;
         if(parameters.items) {
