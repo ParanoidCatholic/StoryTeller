@@ -286,47 +286,47 @@ function Compiler(variables, functions) {
         };
     }
 
-    function functionExpression(func,parameters) {
-        return {
-            evaluate: function() {
-                evaluatedParameters = parameters.evaluate().value;
-                var parameterArray;
-                if(parameters.items) {
-                    parameterArray = evaluatedParameters;
-                } else {
-                    parameterArray = [evaluatedParameters];
+    function functionExpression(func,parameters,parameterResult) {
+        if(parameterResult) {
+            return {
+                evaluate: function() {
+                    evaluatedParameters = parameters.evaluate().value;
+                    var parameterArray;
+                    if(parameters.items) {
+                        parameterArray = evaluatedParameters;
+                    } else {
+                        parameterArray = [evaluatedParameters];
+                    }
+                    return visible(func.apply(null,parameterArray).get());                        
+                },
+                assign: function(value) {
+                    evaluatedParameters = parameters.evaluate().value;
+                    var parameterArray;
+                    if(parameters.items) {
+                        parameterArray = evaluatedParameters;
+                    } else {
+                        parameterArray = [evaluatedParameters];
+                    }
+                    return invisible(func.apply(null,parameterArray).set(value));                        
                 }
-                return visible(func.apply(null,parameterArray));                        
-            },
-            assign: invalidAssignment
-        };
+            };
+        } else {
+            return {
+                evaluate: function() {
+                    evaluatedParameters = parameters.evaluate().value;
+                    var parameterArray;
+                    if(parameters.items) {
+                        parameterArray = evaluatedParameters;
+                    } else {
+                        parameterArray = [evaluatedParameters];
+                    }
+                    return visible(func.apply(null,parameterArray));                        
+                },
+                assign: invalidAssignment
+            };
+        }
     }
-	
-	function propertyExpression(func,parameters) {
-        return {
-            evaluate: function() {
-                evaluatedParameters = parameters.evaluate().value;
-                var parameterArray;
-                if(parameters.items) {
-                    parameterArray = evaluatedParameters;
-                } else {
-                    parameterArray = [evaluatedParameters];
-                }
-                return visible(func.apply(null,parameterArray).get(););                        
-            },
-            assign: function(value) {
-                evaluatedParameters = parameters.evaluate().value;
-                var parameterArray;
-                if(parameters.items) {
-                    parameterArray = evaluatedParameters;
-                } else {
-                    parameterArray = [evaluatedParameters];
-                }
-                return visible(func.apply(null,parameterArray).set(value););                        
-            }
-        };
-    }
-	
+		
 	function blockFunctionExpression(func,parameters) {
         var parameterArray;
         if(parameters.items) {
@@ -459,7 +459,7 @@ function Compiler(variables, functions) {
             if(funcDef.blockFunction) {
                 funcs[name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation}
             } else {
-                funcs[name] = {tokenType: TokenType.func, operation: funcDef.operation}
+                funcs[name] = {tokenType: TokenType.func, operation: funcDef.operation, propertyResult: funcDef.propertyResult}
             }
         }
     }
@@ -500,7 +500,7 @@ function Compiler(variables, functions) {
                     _stack.push(token.expression(operand));
                     break;
                 case TokenType.func:
-                    _stack.push(functionExpression(token.operation,_stack.pop()));                
+                    _stack.push(functionExpression(token.operation,_stack.pop(),token.propertyResult));                
                     break;
 				case TokenType.blockFunc:                    
                     _stack.push(blockFunctionExpression(token.operation,_stack.pop()));

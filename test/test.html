@@ -92,6 +92,11 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 	</head>
 	<body>    
         <div class="page" id="start">		
+            [isHolding("Ben","kitana")=true]
+            <p>[isHolding("Ben","kitana")]</p>
+            <p>[isHolding("Ben","plank")]</p>
+            <p>[isHolding("Brian","kitana")]</p>
+            <hr/>
 			<p>[randomBoolean(0.5)]</p>
 			<p>[randomNumber(-1,1)]</p>
 			<p>[randomInteger(0,100)]</p>
