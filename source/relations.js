@@ -19,9 +19,9 @@ function Set() {
     }
     
     function _getIndex(name) {
-        var i = _index[name];
-        if(i) {
-            return i;
+        var i = _index[name];                
+        if(i>=0) {
+            return _index[name];
         }
         throw new Error(stringFormat("Name not found '{0}'",[name]));
     }
@@ -54,7 +54,7 @@ function Set() {
     this.getIndex = _getIndex;
     this.getByIndex = _getByIndex;
     this.lookup = _lookup;
-    this.lookupByIndex = _lookupByIndex;    
+    this.lookupByIndex = _lookupByIndex;
 }
 
 function Relation() {
