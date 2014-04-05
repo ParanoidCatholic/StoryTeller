@@ -142,7 +142,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageIdentifier, error.message]));
         }
 	}
-           
+               
     var functions = [
         {name: "randomInteger", operation: random.getInteger.bind(random)},
         {name: "randomNumber", operation: random.getNumber.bind(random)},

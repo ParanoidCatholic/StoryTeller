@@ -106,6 +106,29 @@ function Compiler(variables, functions) {
             }
         }
     }
+        
+    function foreachFunction(block, elementExpression, valuesExpression) {  
+        
+        var values = valuesExpression.evaluate();        
+        var resultBuilder = new StringBuilder();
+                
+        if(values.hasNext && values.next) {
+            while(values.hasNext()) {
+                elementExpression.assign(values.next());
+                resultBuilder.append(block.execute());
+            }
+        } else if(values instanceof Array) {
+            for(var i=0;i<values.length;i++) {
+                elementExpression.assign(values[i]);
+                resultBuilder.append(block.execute());
+            }
+        } else {
+            elementExpression.assign(value);
+            resultBuilder.append(block.execute());
+        }
+        
+        return resultBuilder.getValue();
+    }
 	
     function FunctionBlockParameter(parameter) {
         this.evaluate = function(){return parameter.evaluate().value;};
@@ -113,6 +136,7 @@ function Compiler(variables, functions) {
     }
     
 	function FunctionBlock(func, parameters) {
+        
 		var _block = new CodeBlock();
 		
 		var _parameters = [_block];
@@ -121,7 +145,7 @@ function Compiler(variables, functions) {
             var parameter = parameters[i];
             _parameters.push(new FunctionBlockParameter(parameter));
         }
-                		
+                                
         this.addLine = function(line) {
             _block.addLine(line);
         }
@@ -431,6 +455,8 @@ function Compiler(variables, functions) {
     var reserved = {
         "if": true,
         "else": true,
+        "foreach": true,
+        "in": true,
         "end": true,
         "equal": true,
         "notEqual": true,
@@ -672,12 +698,20 @@ function Compiler(variables, functions) {
             throw new Error(stringFormat("Unexpected token '{0}'", [tokenString]));    
         }
         
-        function generateExpression(tokenStrings, start) {
+        function generateExpression(tokenStrings, start, end) {
             var builder = new ExpressionBuilder();
             
             var mode = ContextMode.incomplete;
             
-            for(var i=start;i<tokenStrings.length;i++) {
+            if(!start) {
+                start = 0;
+            }
+            
+            if(!end) {
+                end = tokenStrings.length;
+            }
+            
+            for(var i=start;i<end;i++) {
                 var token = readToken(mode, tokenStrings[i]);
                 mode = tokenTypeMode[token.tokenType];
                 builder.addToken(token);
@@ -713,6 +747,21 @@ function Compiler(variables, functions) {
                             throw new Error("Unexpected statement");
                         }
                         break;
+                    case "foreach":
+                        var i = 1;
+                        while(tokenStrings[i]!="in") {
+                            i++;
+                            if(i == tokenStrings.length) {
+                                throw new Error("Expected 'in'");
+                            }                            
+                        }
+                        var elementExpression = generateExpression(tokenStrings,1,i);
+                        var valuesExpression = generateExpression(tokenStrings,i+1);
+                        var block = new FunctionBlock(foreachFunction, [elementExpression,valuesExpression]);
+                        currentBlock.addLine(block);
+                        blockStack.push(currentBlock);
+                        currentBlock = block;
+                        break;
                     case "end":
                         if(tokenStrings.length > 1) {
                             throw new Error("Unexpected tokens after 'end'");
@@ -723,13 +772,13 @@ function Compiler(variables, functions) {
                         currentBlock = blockStack.pop();
                         break;
                     default:
-                        var expression = generateExpression(tokenStrings,0);
+                        var expression = generateExpression(tokenStrings);
                         if(expression.block) {
                             currentBlock.addLine(expression.block);
                             blockStack.push(currentBlock);
                             currentBlock = expression.block;
                         } else {
-                            currentBlock.addLine(expressionLine(generateExpression(tokenStrings,0),statement));  
+                            currentBlock.addLine(expressionLine(generateExpression(tokenStrings),statement));  
                         }					                  
                 }
             } catch(error) {

@@ -97,6 +97,12 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
             <p>[isHolding("Ben","plank")]</p>
             <p>[isHolding("Brian","kitana")]</p>
             <hr/>
+            <p>
+            [foreach $prime in (2,3,5,7,11)]
+                [$prime]
+            [end]
+            </p>
+            <hr/>
 			<p>[randomBoolean(0.5)]</p>
 			<p>[randomNumber(-1,1)]</p>
 			<p>[randomInteger(0,100)]</p>
