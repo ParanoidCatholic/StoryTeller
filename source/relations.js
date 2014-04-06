@@ -5,9 +5,10 @@ function Set() {
     for(var i=0;i<arguments.length;i++) {
         var member = arguments[i];
         _members.push(member);
-        if(member.name) {
-            _index[member.name] = i;
+        if(!member.name) {
+            throw new Error("Missing name in set");
         }
+        _index[member.name] = i;
     }
     
     function _getByIndex(i) {
@@ -16,6 +17,12 @@ function Set() {
             return item;
         }
         throw new Error(stringFormat("Index not found '{0}'",[i]));
+    }
+    
+    
+    function _getName(i) {
+        var item = _getByIndex(i);
+        return item.name;
     }
     
     function _getIndex(name) {
@@ -29,7 +36,7 @@ function Set() {
     function _get(name) {
         return _getByIndex(_getIndex(name));
     }
-
+    
     function _lookupByIndex(i, key) {
         var item = _getByIndex(i);   
         var value = item[key];
@@ -50,7 +57,8 @@ function Set() {
     this.getByIndex = _getByIndex;
     
     this.size = _size;
-    this.get = _get;
+    this.get = _get;    
+    this.getName = _getName;
     this.getIndex = _getIndex;
     this.getByIndex = _getByIndex;
     this.lookup = _lookup;
@@ -84,6 +92,36 @@ function Relation() {
         }
         return index;
     };
+    
+    function _check(keys) {
+        var bitIndex = _getIndex.apply(this,arguments);
+        var index = bitIndex>>4;
+        var offset = bitIndex%16;
+        var mask = (0x0001 << offset);
+        return (_data[index] & mask)==mask;
+    };
+    
+    function _find(keys, result, results) {
+        var i = 0;
+        while(i<keys.length && keys[i]!=null) {
+            i++;
+        }
+        if(i==keys.length) {
+            if(_check(keys)) {
+                results.push(result);
+            }
+        } else {
+            var set = _sets[i];
+            for(j=0;j<set.size();j++) {
+                var name = set.getName(j);
+                keys[i] = name;
+                result.push(name);
+                _find(keys, result, results);
+                result.pop();
+            }
+            keys[i] = null;
+        }        
+    }
         
     this.set = function() {
         var bitIndex = _getIndex.apply(this,arguments);
@@ -99,13 +137,7 @@ function Relation() {
         _data[index] = _data[index] & ~(0x0001 << offset);
     };
     
-    this.check = function(keys) {
-        var bitIndex = _getIndex.apply(this,arguments);
-        var index = bitIndex>>4;
-        var offset = bitIndex%16;
-        var mask = (0x0001 << offset);
-        return (_data[index] & mask)==mask;
-    };
+    this.check = _check;
         
 	this.size = function() {
 		return _size;
