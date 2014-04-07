@@ -81,7 +81,7 @@ function Relation() {
         _data.push(0x0000);
     }
     
-    function _getIndex() {
+    function _getIndex() {        
         if(arguments.length!=_sets.length) {
             throw new Error(stringFormat("Wrong number of keys ({0}), expected ({1})",[arguments.length, _sets.length]));
         }
@@ -94,25 +94,25 @@ function Relation() {
     };
     
     function _check(keys) {
-        var bitIndex = _getIndex.apply(this,arguments);
+        var bitIndex = _getIndex.apply(this,keys);
         var index = bitIndex>>4;
         var offset = bitIndex%16;
         var mask = (0x0001 << offset);
         return (_data[index] & mask)==mask;
     };
     
-    function _find(keys, result, results) {
+    function _find(keys, result, results) {    
         var i = 0;
         while(i<keys.length && keys[i]!=null) {
             i++;
         }
         if(i==keys.length) {
             if(_check(keys)) {
-                results.push(result);
+                results.push(result.slice(0, result.length));
             }
         } else {
             var set = _sets[i];
-            for(j=0;j<set.size();j++) {
+            for(var j=0;j<set.size();j++) {
                 var name = set.getName(j);
                 keys[i] = name;
                 result.push(name);
@@ -122,7 +122,7 @@ function Relation() {
             keys[i] = null;
         }        
     }
-        
+            
     this.set = function() {
         var bitIndex = _getIndex.apply(this,arguments);
         var index = bitIndex>>4;
@@ -130,14 +130,23 @@ function Relation() {
         _data[index] = _data[index] | (0x0001 << offset);
     };
     
-    this.clear = function(keys) {
+    this.clear = function() {
         var bitIndex = _getIndex.apply(this,arguments);
         var index = bitIndex>>4;
         var offset = bitIndex%16;
         _data[index] = _data[index] & ~(0x0001 << offset);
     };
     
-    this.check = _check;
+    this.check = function() { 
+        return _check(arguments); 
+    };
+    
+    this.find = function() {
+        var results = [];
+        var result = [];
+        _find(arguments, result, results);
+        return results;
+    };
         
 	this.size = function() {
 		return _size;

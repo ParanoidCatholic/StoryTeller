@@ -161,12 +161,28 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     }
 	
 	function relationResult(relation, keys) {
+    
+        var nullKeys = false;
+        for(var i=0;i<keys.length;i++) {
+            if(keys[i]==null) {
+                nullKeys = true;
+                break;
+            }
+        }
+    
         return {
             get: function() {
-                return relation.check.apply(relation,keys);
+                if(nullKeys) {
+                    return relation.find.apply(relation,keys);
+                } else {
+                    return relation.check.apply(relation,keys);
+                }                
             },
             
             set: function(value) {
+                if(nullKeys) {
+                    throw new Error("Relation with null keys cannot be assigned to");
+                }
 				if(value) {
 					relation.set.apply(relation,keys);
 				} else {

@@ -424,7 +424,8 @@ function Compiler(variables, functions) {
         "-" : negativeOperator,
         "not" : notOperator,
         "true": {tokenType: TokenType.literal, value: true},
-        "false": {tokenType: TokenType.literal, value: false}
+        "false": {tokenType: TokenType.literal, value: false},
+        "null": {tokenType: TokenType.literal, value: null}
     };
 
     symbols[ContextMode.complete] = {
@@ -464,10 +465,12 @@ function Compiler(variables, functions) {
         "lessThanOrEqual": true,
         "greaterThan": true,
         "greaterThanOrEqual": true,
+        "not": true,
         "and": true,
         "or": true,
         "true": true,
-        "false": true
+        "false": true,
+        "null": true
     };
     
 	var funcs = {};
