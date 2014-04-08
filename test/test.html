@@ -91,12 +91,48 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 		</script>
 	</head>
 	<body>    
-        <div class="page" id="start">		
+        <div class="page" id="start">	
+            <p>[people("Brian","surname")]</p>
+            <p>[people(1,"surname")]</p>
+            <p>[items("golf club","damage")]</p>
+            <p>[items(3,"damage")]</p>
+            <p>[people("Ben")]</p>
+            <p>[people(3)]</p>
+            <p>[items("rolling pin")]</p>
+            <p>[items(1)]</p>
+            <p>PEOPLE:</p>
+            <ul>
+            [foreach $person in people()]
+            <li>[$person]</li>
+            [end]
+            </ul>
+            <p>ITEMS:</p>
+            <ul>
+            [foreach $item in items()]
+            <li>[$item]</li>
+            [end]
+            </ul>
+            <hr/>
             [isHolding("Ben","kitana")=true]
+            [isHolding("Brian","kitana")=true]
             <p>[isHolding("Ben","kitana")]</p>
             <p>[isHolding("Ben","plank")]</p>
             <p>[isHolding("Brian","kitana")]</p>
-            <p>[isHolding("Ben",null)]</p>
+            <p>
+            [foreach $item in isHolding("Ben",null)]
+               ([$item]) 
+            [end]
+            </p>
+            <p>
+            [foreach $name in isHolding(null,"kitana")]
+               ([$name]) 
+            [end]
+            </p>
+            <p>
+            [foreach ($name,$item) in isHolding(null,null)]
+               ([$name],[$item]) 
+            [end]
+            </p>
             <hr/>
             <p>
             [foreach $prime in (2,3,5,7,11)]

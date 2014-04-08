@@ -18,11 +18,18 @@ function Set() {
         }
         throw new Error(stringFormat("Index not found '{0}'",[i]));
     }
-    
-    
+        
     function _getName(i) {
         var item = _getByIndex(i);
         return item.name;
+    }
+    
+    function _getAllNames() {
+        var names = [];
+        for(var i=0;i<_members.length;i++) {
+            names.push(_members[i].name);
+        }
+        return names;
     }
     
     function _getIndex(name) {
@@ -59,6 +66,7 @@ function Set() {
     this.size = _size;
     this.get = _get;    
     this.getName = _getName;
+    this.getAllNames = _getAllNames;
     this.getIndex = _getIndex;
     this.getByIndex = _getByIndex;
     this.lookup = _lookup;

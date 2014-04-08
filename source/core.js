@@ -202,6 +202,31 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 			propertyResult: true
 		};
 	}
+    
+    function setFunction(name, set) {
+		return {
+			name: name,
+			operation: function(id,key) {
+				if(id) {                
+                    if(key) {
+                        if(typeof(id) == "number") {
+                            return set.lookupByIndex(id,key);
+                        } else {
+                            return set.lookup(id,key);
+                        }
+                    } else {
+                        if(typeof(id) == "number") {
+                            return set.getName(id);    
+                        } else {
+                            return set.getIndex(id);
+                        }
+                    }
+                } else {
+                    return set.getAllNames();
+                }
+			}
+		};
+	}
 	
 	if(relations && relations.length) {
 		for(var i=0; i<relations.length; i++) {          
@@ -210,6 +235,13 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 			functions.push(relationFunction(definition.name,definition.relation));
         }
 	}
+    
+    if(sets && sets.length) {
+        for(var i=0; i<sets.length; i++) {
+            var definition = sets[i];
+            functions.push(setFunction(definition.name,definition.set));
+        }
+    }
 		
     var _compiler = new Compiler(variables, functions);
     	        
