@@ -415,11 +415,12 @@ function Compiler(variables, functions) {
     var modulusOperator = {tokenType: TokenType.operator, precedence: 4, expression: modulusExpression};
     var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression};
     var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression};
-	var arrayFunction = (tokenType: TokenType.func, operation: function(){return arrayExpression(arguments);}, propertyResult: true)
+	var arrayFunction = {tokenType: TokenType.func, operation: function(){return arrayExpression(arguments);}, propertyResult: true}
 	
     var symbols = [];
 
     symbols[ContextMode.start] = {
+        "@" : arrayFunction,
         "(" : leftBracket,
         ")" : rightBracket,
         "-" : negativeOperator,
