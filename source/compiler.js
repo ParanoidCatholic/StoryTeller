@@ -363,13 +363,15 @@ function Compiler(variables, functions) {
         return {
 			block: new FunctionBlock(func, parameterArray),
             evaluate: function() {
-                throw new Error("Block functions cannot be evaluated in a statement.");                       
+                throw new Error("Block functions cannot be evaluated in a statement.");
             },
             assign: invalidAssignment
         };
     }
     
     function arrayExpression(items) {
+        console.log("arrayExpression");
+        console.log(items);
         return {
             items: items,
             evaluate: function() {
@@ -541,7 +543,7 @@ function Compiler(variables, functions) {
                     _stack.push(token.expression(operand));
                     break;
                 case TokenType.func:				
-                    _stack.push(functionExpression(token.operation,_stack.pop(),token.propertyResult));                
+                    _stack.push(functionExpression(token.operation,_stack.pop(),token.propertyResult));
                     break;
 				case TokenType.blockFunc:                    
                     _stack.push(blockFunctionExpression(token.operation,_stack.pop()));
@@ -554,6 +556,7 @@ function Compiler(variables, functions) {
                     break;				
 				case TokenType.array:
 					_stack.push(arrayBracket);
+                    break;
                 case TokenType.leftBracket:
                     _stack.push(normalBracket);
                     break;				
@@ -749,6 +752,7 @@ function Compiler(variables, functions) {
         }
          
         function addStatement(statement) {
+            console.log(statement);
             try{
                 var tokenStrings = statement.match(tokenRegex);
                 
@@ -802,7 +806,7 @@ function Compiler(variables, functions) {
                             blockStack.push(currentBlock);
                             currentBlock = expression.block;
                         } else {
-                            currentBlock.addLine(expressionLine(generateExpression(tokenStrings),statement));  
+                            currentBlock.addLine(expressionLine(expression,statement));  
                         }					                  
                 }
             } catch(error) {

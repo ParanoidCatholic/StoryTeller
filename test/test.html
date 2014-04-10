@@ -91,7 +91,24 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 		</script>
 	</head>
 	<body>    
-        <div class="page" id="start">	
+        <div class="page" id="start">
+            [$arrayTest1=@(((1)),((2)))]
+            [$arrayTest2=(@((1)),(@(2)))]            
+            {[$arrayTest1]}
+            {[$arrayTest2]}
+            <ol>
+            [foreach $n in $arrayTest1]
+            <li>[$n]</li>
+            [end]
+            </ol>
+            <ol>
+            [foreach $x in $arrayTest2]
+                [foreach $m in $x]
+                <li>[$m]</li>
+                [end]
+            [end]
+            </ol>
+            <hr/>
             <p>[people("Brian","surname")]</p>
             <p>[people(1,"surname")]</p>
             <p>[items("golf club","damage")]</p>
