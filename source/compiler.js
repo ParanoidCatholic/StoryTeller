@@ -32,7 +32,8 @@ function Compiler(variables, functions) {
         unaryOperator: 9,
         variable: 10,
         literal: 11,
-        marker: 12
+        marker: 12,
+		array: 13
     };
 
     var ContextMode = {
@@ -51,6 +52,7 @@ function Compiler(variables, functions) {
     tokenTypeMode[TokenType.unaryOperator] = ContextMode.incomplete;
     tokenTypeMode[TokenType.variable] = ContextMode.complete;
     tokenTypeMode[TokenType.literal] = ContextMode.complete;
+	tokenTypeMode[TokenType.array] = ContextMode.func; 
 
 	function CodeBlock() {
         var _lines = [];
@@ -393,7 +395,7 @@ function Compiler(variables, functions) {
             }
         }
     }
-
+	
     var marker = {tokenType: TokenType.marker};
 
     var leftBracket = {tokenType: TokenType.leftBracket};
@@ -415,12 +417,12 @@ function Compiler(variables, functions) {
     var modulusOperator = {tokenType: TokenType.operator, precedence: 4, expression: modulusExpression};
     var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression};
     var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression};
-	var arrayFunction = {tokenType: TokenType.func, operation: function(){return arrayExpression(arguments);}, propertyResult: true}
+	var arrayToken = {tokenType: TokenType.array}
 	
     var symbols = [];
 
     symbols[ContextMode.start] = {
-        "@" : arrayFunction,
+        "@" : arrayToken,
         "(" : leftBracket,
         ")" : rightBracket,
         "-" : negativeOperator,
@@ -516,6 +518,14 @@ function Compiler(variables, functions) {
         }
     }
 			
+	var BracketType = {
+		normal: 1,
+		array: 2
+	};
+	
+	var normalBracket = {bracketType: BracketType.normal};
+	var arrayBracket = {bracketType: BracketType.array};		
+			
     function RpnExpressionBuilder() {
         var _stack = [];
         
@@ -530,7 +540,7 @@ function Compiler(variables, functions) {
                     var operand = _stack.pop();
                     _stack.push(token.expression(operand));
                     break;
-                case TokenType.func:
+                case TokenType.func:				
                     _stack.push(functionExpression(token.operation,_stack.pop(),token.propertyResult));                
                     break;
 				case TokenType.blockFunc:                    
@@ -541,17 +551,19 @@ function Compiler(variables, functions) {
                     break;
                 case TokenType.variable:
                     _stack.push(variableExpression(token.value));
-                    break;
+                    break;				
+				case TokenType.array:
+					_stack.push(arrayBracket);
                 case TokenType.leftBracket:
-                    _stack.push(null);
-                    break;
+                    _stack.push(normalBracket);
+                    break;				
                 case TokenType.rightBracket:
                     var items = [];
                     var item;
-                    while((item=_stack.pop())) {
+                    while(!(item=_stack.pop()).bracketType) {
                         items.push(item);
                     }
-                    if(items.length==1) {
+                    if(items.length==1 && item.bracketType!=BracketType.array) {
                         _stack.push(items[0]);
                     } else {
                         _stack.push(arrayExpression (items.reverse()));
@@ -594,10 +606,17 @@ function Compiler(variables, functions) {
         }
             
         this.addToken = function(token) {     
-            switch(token.tokenType) {            
+            switch(token.tokenType) { 
+				case TokenType.array:
+					_stack.push(token);
+					break;
                 case TokenType.leftBracket:
-                    _stack.push(token);
-                    _builder.addToken(token);
+					if(topTokenTypeIs([TokenType.array])) {
+						_builder.addToken(_stack.pop());
+					} else {
+						_builder.addToken(token);
+					}
+					_stack.push(token);
                     break;
                 case TokenType.rightBracket:
                     while(!topTokenTypeIs([TokenType.leftBracket])) {
