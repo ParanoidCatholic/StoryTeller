@@ -370,18 +370,16 @@ function Compiler(variables, functions) {
     }
     
     function arrayExpression(items) {
-        console.log("arrayExpression");
-        console.log(items);
         return {
             items: items,
             evaluate: function() {
-                result = [];
+                var result = [];
                 for(var i=0;i<items.length;i++) {
                     result.push(items[i].evaluate().value)
                 }
                 return invisible(result);                        
             },
-            assign: function(value) {                
+            assign: function(value) {  
                 if(value instanceof Array) {                
                     var n = Math.min(items.length, value.length);
                     var result = [];
@@ -752,7 +750,6 @@ function Compiler(variables, functions) {
         }
          
         function addStatement(statement) {
-            console.log(statement);
             try{
                 var tokenStrings = statement.match(tokenRegex);
                 

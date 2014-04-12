@@ -103,9 +103,11 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
             </ol>
             <ol>
             [foreach $x in $arrayTest2]
+                <li><ol>
                 [foreach $m in $x]
                 <li>[$m]</li>
                 [end]
+                </ol></li>
             [end]
             </ol>
             <hr/>
