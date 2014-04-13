@@ -92,6 +92,18 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 	</head>
 	<body>    
         <div class="page" id="start">
+            [$f=9]
+            [($a,($b0, $b1), $c, @($d0),$e,$f)=(1,(2,3),4,(5,6,7),8)]
+            <ul>
+                <li>$a = [$a] (1)</li>
+                <li>$b0 = [$b0] (2)</li>
+                <li>$b1 = [$b1] (3)</li>
+                <li>$c = [$c] (4)</li>
+                <li>$d0 = [$d0] (5)</li>
+                <li>$e = [$e] (8)</li>
+                <li>$f = [$f] (9)</li>
+            </ul>
+            <hr/>
             [$arrayTest1=@(((1)),((2)))]
             [$arrayTest2=(@((1)),(@(2)))]            
             {[$arrayTest1]}
