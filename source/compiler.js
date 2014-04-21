@@ -25,6 +25,8 @@ function Compiler(variables, functions) {
     var TokenType = {
         leftBracket: 1,
         rightBracket: 2,
+        leftBrace: 3,
+        rightBrace: 4,
         separator: 5,
         func: 6, 
 		blockFunc: 7,
@@ -46,6 +48,8 @@ function Compiler(variables, functions) {
      
     tokenTypeMode[TokenType.leftBracket] = ContextMode.start;
     tokenTypeMode[TokenType.rightBracket] = ContextMode.complete;
+    tokenTypeMode[TokenType.leftBrace] = ContextMode.start;
+    tokenTypeMode[TokenType.rightBrace] = ContextMode.complete;
     tokenTypeMode[TokenType.separator] = ContextMode.start;
     tokenTypeMode[TokenType.func] = ContextMode.func; 
     tokenTypeMode[TokenType.operator] = ContextMode.incomplete;
@@ -400,6 +404,8 @@ function Compiler(variables, functions) {
 
     var leftBracket = {tokenType: TokenType.leftBracket};
     var rightBracket = {tokenType: TokenType.rightBracket};
+    var leftBrace = {tokenType: TokenType.leftBrace};
+    var rightBrace = {tokenType: TokenType.rightBrace};
     var separator = {tokenType: TokenType.separator};
     var assignmentOperator = {tokenType: TokenType.operator, precedence: 0, expression: assignmentExpression};    
     var andOperator = {tokenType: TokenType.operator, precedence: 1, expression: andExpression};
@@ -425,6 +431,8 @@ function Compiler(variables, functions) {
         "@" : arrayToken,
         "(" : leftBracket,
         ")" : rightBracket,
+        "{" : leftBrace,
+        "}" : rightBrace,
         "-" : negativeOperator,
         "not" : notOperator,
         "true": {tokenType: TokenType.literal, value: true},
@@ -434,6 +442,7 @@ function Compiler(variables, functions) {
 
     symbols[ContextMode.complete] = {
         ")" : rightBracket,
+        "}" : rightBrace,
         "," : separator,
         "=" : assignmentOperator,
         "equal" : equalOperator,
@@ -520,12 +529,14 @@ function Compiler(variables, functions) {
 			
 	var BracketType = {
 		normal: 1,
-		array: 2
+		array: 2,
+        curly: 3
 	};
 	
 	var normalBracket = {bracketType: BracketType.normal};
 	var arrayBracket = {bracketType: BracketType.array};		
-			
+    var curlyBracket = {bracketType: BracketType.curly};	
+    
     function RpnExpressionBuilder() {
         var _stack = [];
         
@@ -555,20 +566,34 @@ function Compiler(variables, functions) {
 				case TokenType.array:
 					_stack.push(arrayBracket);
                     break;
+                case TokenType.leftBrace:
+					_stack.push(curlyBracket);
+                    break;
                 case TokenType.leftBracket:
                     _stack.push(normalBracket);
                     break;				
                 case TokenType.rightBracket:
+                case TokenType.rightBrace:
                     var items = [];
                     var item;
                     while(!(item=_stack.pop()).bracketType) {
                         items.push(item);
                     }
-                    if(items.length==1 && item.bracketType!=BracketType.array) {
-                        _stack.push(items[0]);
-                    } else {
+                    if(token.tokenType==TokenType.rightBrace) {
+                        if(item.bracketType!=BracketType.curly) {
+                            throw new Error("Mismatched brackets")
+                        }
                         _stack.push(arrayExpression (items.reverse()));
-                    }
+                    } else {
+                        if(item.bracketType==BracketType.curly) {
+                            throw new Error("Mismatched brackets")
+                        }
+                        if(items.length==1 && item.bracketType!=BracketType.array) {
+                            _stack.push(items[0]);
+                        } else {
+                            _stack.push(arrayExpression (items.reverse()));
+                        }
+                    }                    
             }
         }
         
@@ -606,7 +631,7 @@ function Compiler(variables, functions) {
             return token.tokenType==TokenType.unaryOperator || (token.tokenType==TokenType.operator && token.precedence >= p);
         }
             
-        this.addToken = function(token) {     
+        this.addToken = function(token) {  
             switch(token.tokenType) { 
 				case TokenType.array:
 					_stack.push(token);
@@ -619,8 +644,13 @@ function Compiler(variables, functions) {
 					}
 					_stack.push(token);
                     break;
+                case TokenType.leftBrace:
+					_builder.addToken(token);
+					_stack.push(token);
+                    break;
                 case TokenType.rightBracket:
-                    while(!topTokenTypeIs([TokenType.leftBracket])) {
+                case TokenType.rightBrace:
+                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace])) {
                         _builder.addToken(_stack.pop());
                     }
                     _stack.pop();
@@ -630,7 +660,7 @@ function Compiler(variables, functions) {
                     }
                     break;
                 case TokenType.separator:
-                    while(!topTokenTypeIs([TokenType.leftBracket])) {
+                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace])) {
                         _builder.addToken(_stack.pop());
                     }
                     break;
