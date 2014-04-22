@@ -287,6 +287,41 @@ function Compiler(variables, functions) {
             assign: invalidAssignment
         };
     }
+	
+	function projectionExpression(leftOperand, rightOperand) {						
+		return {
+			evaluate: function() {
+				var items;				
+				var value = leftOperand.evaluate().value;				
+				if(value instanceof Array) {
+					items = value;
+				} else {
+					items = [value];
+				}
+			
+				var index = rightOperand.evaluate().value;
+				if(index instanceof Array) {				
+					var result = [];
+					for(var i=0;i<index.length;i++) {
+						var currentIndex = index[i];
+						if(currentIndex<items.length) {
+							result.push(items[currentIndex.evaluate().value));
+						} else {
+							throw new Error("Index out of range.")
+						}
+					}
+					return visible(result);
+				} else {
+					if(currentIndex<items.length) {
+						return visible(items[currentIndex.evaluate().value);
+					} else {
+						throw new Error("Index out of range.")
+					}
+				}
+			},        
+            assign: invalidAssignment
+        };		
+	}
     
     function andExpression(leftOperand,rightOperand) {
         return {
