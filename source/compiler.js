@@ -23,40 +23,43 @@ function Compiler(variables, functions) {
     }
 
     var TokenType = {
-        leftBracket: 1,
-        rightBracket: 2,
-        leftBrace: 3,
-        rightBrace: 4,
-        separator: 5,
-        func: 6, 
-		blockFunc: 7,
-        operator: 8,
-        unaryOperator: 9,
-        variable: 10,
-        literal: 11,
-        marker: 12,
-		array: 13
+        functionBracket:    1,
+        leftBracket:        2,
+        rightBracket:       3,
+        leftBrace:          4,
+        rightBrace:         5,
+        separator:          6,
+        func:               7, 
+		blockFunc:          8,
+        operator:           9,
+        unaryOperator:      10,
+        variable:           11,
+        literal:            12,
+        marker:             13,
+		array:              14
     };
 
     var ContextMode = {
-        incomplete : 1,
-        complete: 2,
-        func: 3
+        start:      1,
+        incomplete: 2,
+        complete:   3,
+        func:       4
     };
 
     var tokenTypeMode = [];
      
     tokenTypeMode[TokenType.leftBracket] = ContextMode.start;
+    tokenTypeMode[TokenType.functionBracket] = ContextMode.start;
     tokenTypeMode[TokenType.rightBracket] = ContextMode.complete;
     tokenTypeMode[TokenType.leftBrace] = ContextMode.start;
     tokenTypeMode[TokenType.rightBrace] = ContextMode.complete;
     tokenTypeMode[TokenType.separator] = ContextMode.start;
-    tokenTypeMode[TokenType.func] = ContextMode.func; 
+    tokenTypeMode[TokenType.func] = ContextMode.func;
+    tokenTypeMode[TokenType.blockFunc] = ContextMode.func;
     tokenTypeMode[TokenType.operator] = ContextMode.incomplete;
     tokenTypeMode[TokenType.unaryOperator] = ContextMode.incomplete;
     tokenTypeMode[TokenType.variable] = ContextMode.complete;
     tokenTypeMode[TokenType.literal] = ContextMode.complete;
-	tokenTypeMode[TokenType.array] = ContextMode.func; 
 
 	function CodeBlock() {
         var _lines = [];
@@ -305,15 +308,15 @@ function Compiler(variables, functions) {
 					for(var i=0;i<index.length;i++) {
 						var currentIndex = index[i];
 						if(currentIndex<items.length) {
-							result.push(items[currentIndex.evaluate().value));
+							result.push(items[currentIndex]);
 						} else {
 							throw new Error("Index out of range.")
 						}
 					}
 					return visible(result);
 				} else {
-					if(currentIndex<items.length) {
-						return visible(items[currentIndex.evaluate().value);
+					if(index<items.length) {
+						return visible(items[index]);
 					} else {
 						throw new Error("Index out of range.")
 					}
@@ -392,7 +395,7 @@ function Compiler(variables, functions) {
         }
     }
 		
-	function blockFunctionExpression(func,parameters) {
+	function blockFunctionExpression(func,parameters) {    
         var parameterArray;
         if(parameters.items) {
             parameterArray = parameters.items;
@@ -438,6 +441,7 @@ function Compiler(variables, functions) {
     var marker = {tokenType: TokenType.marker};
 
     var leftBracket = {tokenType: TokenType.leftBracket};
+    var functionBracket = {tokenType: TokenType.functionBracket};
     var rightBracket = {tokenType: TokenType.rightBracket};
     var leftBrace = {tokenType: TokenType.leftBrace};
     var rightBrace = {tokenType: TokenType.rightBrace};
@@ -456,14 +460,13 @@ function Compiler(variables, functions) {
     var multiplicationOperator = {tokenType: TokenType.operator, precedence: 4, expression: multiplicationExpression};
     var divisionOperator = {tokenType: TokenType.operator, precedence: 4, expression: divisionExpression};
     var modulusOperator = {tokenType: TokenType.operator, precedence: 4, expression: modulusExpression};
+    var projectionOperator = {tokenType: TokenType.operator, precedence: 5, expression: projectionExpression};
     var notOperator = {tokenType: TokenType.unaryOperator, expression: notExpression};
     var negativeOperator = {tokenType: TokenType.unaryOperator, expression: negativeExpression};
-	var arrayToken = {tokenType: TokenType.array}
-	
+		
     var symbols = [];
 
-    symbols[ContextMode.start] = {
-        "@" : arrayToken,
+    symbols[ContextMode.start] = {        
         "(" : leftBracket,
         ")" : rightBracket,
         "{" : leftBrace,
@@ -492,13 +495,14 @@ function Compiler(variables, functions) {
         "/" : divisionOperator,
         "%" : modulusOperator,
         "and" : andOperator,
-        "or" : orOperator
+        "or" : orOperator,
+        "@" : projectionOperator
     };
 
     symbols[ContextMode.incomplete] = symbols[ContextMode.start];
 
     symbols[ContextMode.func] = {
-        "(" : leftBracket
+        "(" : functionBracket
     };
     
     var reserved = {
@@ -564,12 +568,12 @@ function Compiler(variables, functions) {
 			
 	var BracketType = {
 		normal: 1,
-		array: 2,
+		func: 2,
         curly: 3
 	};
 	
 	var normalBracket = {bracketType: BracketType.normal};
-	var arrayBracket = {bracketType: BracketType.array};		
+	var functionBracket = {bracketType: BracketType.func};		
     var curlyBracket = {bracketType: BracketType.curly};	
     
     function RpnExpressionBuilder() {
@@ -606,7 +610,10 @@ function Compiler(variables, functions) {
                     break;
                 case TokenType.leftBracket:
                     _stack.push(normalBracket);
-                    break;				
+                    break;	
+                case TokenType.functionBracket:
+                    _stack.push(functionBracket);
+                    break;                    
                 case TokenType.rightBracket:
                 case TokenType.rightBrace:
                     var items = [];
@@ -618,15 +625,17 @@ function Compiler(variables, functions) {
                         if(item.bracketType!=BracketType.curly) {
                             throw new Error("Mismatched brackets")
                         }
-                        _stack.push(arrayExpression (items.reverse()));
+                        _stack.push(arrayExpression(items.reverse()));
                     } else {
                         if(item.bracketType==BracketType.curly) {
                             throw new Error("Mismatched brackets")
-                        }
-                        if(items.length==1 && item.bracketType!=BracketType.array) {
+                        }     
+                        if(item.bracketType==BracketType.func) {
+                            _stack.push(arrayExpression(items.reverse()));
+                        } else if(items.length==1) {
                             _stack.push(items[0]);
                         } else {
-                            _stack.push(arrayExpression (items.reverse()));
+                            throw new Error("Lists must use curly brackets")
                         }
                     }                    
             }
@@ -666,26 +675,17 @@ function Compiler(variables, functions) {
             return token.tokenType==TokenType.unaryOperator || (token.tokenType==TokenType.operator && token.precedence >= p);
         }
             
-        this.addToken = function(token) {  
+        this.addToken = function(token) {
             switch(token.tokenType) { 
-				case TokenType.array:
-					_stack.push(token);
-					break;
+				case TokenType.functionBracket:
                 case TokenType.leftBracket:
-					if(topTokenTypeIs([TokenType.array])) {
-						_builder.addToken(_stack.pop());
-					} else {
-						_builder.addToken(token);
-					}
-					_stack.push(token);
-                    break;
                 case TokenType.leftBrace:
 					_builder.addToken(token);
 					_stack.push(token);
                     break;
                 case TokenType.rightBracket:
                 case TokenType.rightBrace:
-                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace])) {
+                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace, TokenType.functionBracket])) {
                         _builder.addToken(_stack.pop());
                     }
                     _stack.pop();
@@ -695,7 +695,7 @@ function Compiler(variables, functions) {
                     }
                     break;
                 case TokenType.separator:
-                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace])) {
+                    while(!topTokenTypeIs([TokenType.leftBracket, TokenType.leftBrace, TokenType.functionBracket])) {
                         _builder.addToken(_stack.pop());
                     }
                     break;
@@ -755,7 +755,7 @@ function Compiler(variables, functions) {
         var locals = {};
       
         function readToken(mode, tokenString) {
-        
+            
             if(symbols[mode][tokenString]) {
                 return symbols[mode][tokenString];
             }
