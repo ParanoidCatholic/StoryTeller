@@ -478,9 +478,20 @@ variables = [[
                 <li>$f = 9</li>
                 <li>$g will not be updated and will keep whatever value (if any) it had before.</li>
             </ul>
-            <p>Prior to version 0.3, Storyteller used round brackets for lists. For backward compatibility, it is still possible to write lists with round brackets. <i>(1,2,3)</i> is equivalent to {1,2,3}.</p> 
-            <p>The only difference is that, with round brackets, StoryTeller will treat a list with exactly one value as simply a value. For example: <i>(1024)</i> simply defines the value 1024. To tell StoryTeller that you want it to treat this as a list, you must type the symbol '@' immediately before the opening bracket:<i>@(1024)</i>.</p>
-            <p>You can include the '@' symbol before any list (defined with round brackets), however it is redundant if the list has more than one element (or none). Note, the @ symbol is unnecessary and illegal with the new curly bracket list style.</p>
+            <p>The projection operator ('@') can be used to extract individual items or sublists from a list. you use it like this: {list}@{index}. {list} is either a literal list or a local variable holding a list. {index} is either a single index or a list of indices, indicating which values to take from the list. Note: the first index in a list is 0.</p>
+			<p>Examples:</p>
+			<ul>
+				<li><i>{"A","B","C"}@1</i> will give "B"</li>
+				<li><i>{"A","B","C"}@{0,2}</i> will give {"A","C"}</li>
+				<li><i>{"A","B","C"}@{2,0}</i> will give {"C","A"}</li>
+				<li><i>{"A","B","C"}@{0,2,2,1}</i> will give {"A","C","C","B"}</li>
+			</ul>
+			<p>If you have local variables: <i>[$primes={2,3,5,7,11}]</i> and <i>[$indices={1,3,3,1}]</i> then:</p>
+			<ul>
+				<li><i>$primes@0</i> will give 2</li>
+				<li><i>$primes@{0,4}</i> will give {2,11}</li>
+				<li><i>$primes@$indices</i> will give {3,7,7,3}</li>
+			</ul>
             [include("contents")]
         </div>        
         <div id="loops" class="page">
@@ -607,7 +618,7 @@ relations = [[
             <p>When there are multiple unknowns then the result is a list of lists:</p>
             <pre>
 &lt;ul&gt;
-    [[foreach ($name, $object) in isHolding(null, null)]]
+    [[foreach {$name, $object} in isHolding(null, null)]]
         &lt;li&gt;[[$name]] is holding the [[$object]]&lt;/li&gt;
     [[end]]
 &lt;/ul&gt;  
