@@ -35,8 +35,7 @@ function Compiler(variables, functions) {
         unaryOperator:      10,
         variable:           11,
         literal:            12,
-        marker:             13,
-		array:              14
+        marker:             13
     };
 
     var ContextMode = {
@@ -307,7 +306,10 @@ function Compiler(variables, functions) {
 					var result = [];
 					for(var i=0;i<index.length;i++) {
 						var currentIndex = index[i];
-						if(currentIndex<items.length) {
+                        if(currentIndex<0) {
+                            currentIndex = items.length+currentIndex;
+                        }
+						if(currentIndex>=0 && currentIndex<items.length) {
 							result.push(items[currentIndex]);
 						} else {
 							throw new Error("Index out of range.")
@@ -315,7 +317,10 @@ function Compiler(variables, functions) {
 					}
 					return visible(result);
 				} else {
-					if(index<items.length) {
+                    if(index<0) {
+                        index = items.length+index;
+                    }
+					if(index>=0 && index<items.length) {
 						return visible(items[index]);
 					} else {
 						throw new Error("Index out of range.")

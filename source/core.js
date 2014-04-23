@@ -82,7 +82,43 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             _stateContents.push(variables[i].value);
         }
     }
-		        
+		      
+    function length(list) {
+        return list.length;
+    }
+           
+    function none(list) {
+        return list.length == 0;
+    }
+    
+    function any(list) {
+        return list.length > 0;
+    }
+    
+    function first(list) {
+        if(list.length>0) {
+            return list[0];
+        } else {
+            return null;
+        }        
+    }
+    
+    function exceptFirst(list) {
+        return list.slice(1);
+    }
+    
+    function last(list) {
+        if(list.length>0) {
+            return list[list.length-1];
+        } else {
+            return null;
+        }        
+    }
+    
+    function exceptLast(list) {
+        return list.slice(0,list.length-1);
+    }
+                      
     function makeLink(block, pageIdentifierExpression) {
         
         var pageIdentifier = pageIdentifierExpression.evaluate();
@@ -142,7 +178,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
             throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageIdentifier, error.message]));
         }
 	}
-               
+                       
     var functions = [
         {name: "randomInteger", operation: random.getInteger.bind(random)},
         {name: "randomNumber", operation: random.getNumber.bind(random)},
@@ -150,8 +186,15 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         {name: "currentPage", operation: function() {return _pages.contents[_pageId.get()].name;}},
         {name: "currentPageNumber", operation: function() {return _pageId.get();}},
 		{name: "include", operation: includePage},
+        {name: "length", operation: length},
+        {name: "none", operation: none},
+        {name: "any", operation: any},
+        {name: "first", operation: first},
+        {name: "exceptFirst", operation: exceptFirst},
+        {name: "last", operation: last},
+        {name: "exceptLast", operation: exceptLast},
 		{name: "link", operation: makeLink, blockFunction: true},
-        {name: "reset", operation: resetLink, blockFunction: true}
+        {name: "reset", operation: resetLink, blockFunction: true}        
     ];
     
     if(userFunctions && userFunctions.length) {

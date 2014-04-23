@@ -92,8 +92,39 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 	</head>
 	<body>    
         <div class="page" id="start">
+            [$inventory={"an apple","five oranges","some grapes"}]
+            <p>
+            [$sublist=exceptLast($inventory)]
+            [if(none($inventory))]
+                You are not carrying anything.
+            [else if(none($sublist))]
+                You are carrying [first($inventory)].
+            [else]   
+                You are carrying             
+                [foreach $item in $sublist]
+                    [$item],
+                [end]
+                and [last($inventory)].    
+            [end]
+            </p>            
+            <hr/>
+            [$thelist={"a","b","c","d","e"}]
+            <ul>
+                <li>[length($thelist)]</li>
+                <li>[none($thelist)]</li>
+                <li>[any($thelist)]</li>
+                <li>[first($thelist)]</li>
+                <li>[exceptFirst($thelist)]</li>
+                <li>[last($thelist)]</li>
+                <li>[exceptLast($thelist)]</li>
+            </ul>
+            <hr/>
             [{"a","b","c"}@1]<br/>
-            [{"a","b","c"}@{0,2}]
+            [{"a","b","c"}@{0,2}]<br/>
+            [{"a","b","c"}@{0,2,2,0}]<br/>
+            [{"a","b","c"}@-2]<br/>
+            [{"a","b","c"}@{0,-1}]<br/>
+            [{"a","b","c"}@{-3,2,-1,0}]
             <hr/>
             [$f=9]
             [{$a,{$b0, $b1}, $c, {$d0},$e,$f}={1,{2,3},4,{5,6,7},8}]
