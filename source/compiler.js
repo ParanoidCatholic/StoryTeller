@@ -312,7 +312,7 @@ function Compiler(variables, functions) {
 						if(currentIndex>=0 && currentIndex<items.length) {
 							result.push(items[currentIndex]);
 						} else {
-							throw new Error("Index out of range.")
+							result.push(null);
 						}
 					}
 					return visible(result);
@@ -323,7 +323,7 @@ function Compiler(variables, functions) {
 					if(index>=0 && index<items.length) {
 						return visible(items[index]);
 					} else {
-						throw new Error("Index out of range.")
+						return visible(null);
 					}
 				}
 			},        

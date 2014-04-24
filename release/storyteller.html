@@ -513,6 +513,9 @@ variables = [[
                 <li><b>exceptFirst({list})</b> returns the all items in {list} except the first.</li>
                 <li><b>last({list})</b> returns the last item in {list}.</li>
                 <li><b>exceptLast({list})</b> returns the all items in {list} except the last.</li>
+				<li><b>peel({list})</b> splits {list} into the first item, last item and a list containing all of the remaining items. (see below).</li>
+				<li><b>peelFirst({list})</b> splits {list} into the first item and a list containing all of the remaining items. (see below).</li>
+				<li><b>peelLast({list})</b> splits {list} into the first item and a list containing all of the remaining items. (see below).</li>
             </ul>
             <p>In the following example $inventory is a list of object names:</p>
             <pre>
@@ -529,7 +532,27 @@ variables = [[
     and [[last($inventory)]].    
 [[end]]
             </pre>
-            <p>If $inventory is empty then the reader will see "You are not carrying anything." If $inventory is {"an apple","five oranges","some grapes"} then the reader will see "You are carrying an apple, five oranges, and some grapes." If you don't want the Oxford comma that's a little more work.</p>
+            <p>If $inventory is empty then the reader will see "You are not carrying anything." If $inventory is {"an apple","five oranges","some grapes"} then the reader will see "You are carrying an apple, five oranges, and some grapes."</p>
+			<p><b>peel, peelFirst and peelLast</b></p>
+			<p>peel({list}) returns a list with three values {First, Middle, Last}. First and Last are (obviously) the first and last items in {list}. Middle is a list containing all of the remaining items. For example <i>[[{$f,$m,$l}=peel({1,2,3,4,5})]]</i> will set $f to 1, $m to {2,3,4} and $l to 5.</p>
+			<p>peelFirst({list}) returns a list with two values {First, Remaining}. First is the first item in {list}. Remaining is a list containing all of the remaining items. For example <i>[[{$f,$r}=peelFirst({1,2,3,4,5})]]</i> will set $f to 1 and $r to {2,3,4,5}. Similarly, peelLast({list}) returns the list {Remaining, Last} where Last is the last item in {list} and Remaining is all of the remaining items. <i>[[{$r,$l}=peelLast({1,2,3,4,5})]]</i> will set $r to {1,2,3,4} and $l to 5.</p>
+			<p>Note: in these functions, if First or Last do not exist (if the list is too short) they will be set to null.</p>
+			<p>The following is an alternative way to display the $inventory list:</p>
+			<pre>
+[[{$fst,$mid,$lst}=peel($inventory)]]
+[[if($fst)]]
+    You are carrying [[$fst]]
+[[else]]
+    You are not carrying anything.
+[[end]]
+[[foreach $item in $mid]]
+    , [[$item]]
+[[end]]
+[[if($lst)]]
+	and [[$lst]].
+[[end]]
+			</pre>
+			<p>Note: this example has been broken up onto multiple lines for readability. If copied as-is it will result in spaces appearing before each comma. To avoid this, remove the line breaks.</p>
             [include("contents")]
         </div>
         <div id="loops" class="page">

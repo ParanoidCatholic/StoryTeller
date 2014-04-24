@@ -118,6 +118,32 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     function exceptLast(list) {
         return list.slice(0,list.length-1);
     }
+	
+	function peel(list) {
+		if(list.length>1) {
+			return [list[0],list.slice(1,list.length-1),list[list.length-1]];
+		} else if(list.length>0) {
+			return [list[0],[],null];
+		} else {
+			return [null,[],null];
+		}
+	}
+	
+	function peelFirst(list) {
+		if(list.length>0) {
+			return [list[0],list.slice(1,list.length)];
+		} else {
+			return [null,[]];
+		}
+	}
+	
+	function peelLast(list) {
+		if(list.length>0) {
+			return [list.slice(0,list.length-1),list[list.length-1]];
+		} else {
+			return [[],null];
+		}
+	}
                       
     function makeLink(block, pageIdentifierExpression) {
         
@@ -193,6 +219,9 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         {name: "exceptFirst", operation: exceptFirst},
         {name: "last", operation: last},
         {name: "exceptLast", operation: exceptLast},
+		{name: "peel", operation: peel},
+		{name: "peelFirst", operation: peelFirst},
+		{name: "peelLast", operation: peelLast},
 		{name: "link", operation: makeLink, blockFunction: true},
         {name: "reset", operation: resetLink, blockFunction: true}        
     ];

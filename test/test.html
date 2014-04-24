@@ -92,6 +92,25 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 	</head>
 	<body>    
         <div class="page" id="start">
+			[$list={1,2,3,4,5,6,7,8,9,10}]
+			[$emptyList={}]
+			[$shortList={1,2}]
+			[$shorterList={1}]
+			<ul>
+				<li>[{$f,$m,$l}=peel($list)]peel($list) [$f] , {[$m]} , [$l]</li>
+				<li>[{$f,$m,$l}=peel($emptyList)]peel($emptyList) [$f] , {[$m]} , [$l]</li>
+				<li>[{$f,$m,$l}=peel($shortList)]peel($shortList) [$f] , {[$m]} , [$l]</li>
+				<li>[{$f,$m,$l}=peel($shorterList)]peel($shorterList) [$f] , {[$m]} , [$l]</li>
+				<li>[{$f,$m}=peelFirst($list)]peelFirst($list) [$f] , {[$m]}</li>
+				<li>[{$f,$m}=peelFirst($emptyList)]peelFirst($emptyList) [$f] , {[$m]}</li>
+				<li>[{$f,$m}=peelFirst($shortList)]peelFirst($shortList) [$f] , {[$m]}</li>
+				<li>[{$f,$m}=peelFirst($shorterList)]peelFirst($shorterList) [$f] , {[$m]}</li>
+				<li>[{$m,$l}=peelLast($list)]peelLast($list) {[$m]} , [$l]</li>
+				<li>[{$m,$l}=peelLast($emptyList)]peelLast($emptyList) {[$m]} , [$l]</li>
+				<li>[{$m,$l}=peelLast($shortList)]peelLast($shortList) {[$m]} , [$l]</li>
+				<li>[{$m,$l}=peelLast($shorterList)]peelLast($shorterList) {[$m]} , [$l]</li>
+			</ul>
+			<hr/>
             [$inventory={"an apple","five oranges","some grapes"}]
             <p>
             [$sublist=exceptLast($inventory)]
@@ -106,7 +125,21 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
                 [end]
                 and [last($inventory)].    
             [end]
-            </p>            
+            </p>  
+			<p>
+			[{$fst,$mid,$lst}=peel($inventory)]
+			[if($fst)]
+				You are carrying [$fst]
+			[else]
+				You are not carrying anything.
+			[end]
+			[foreach $item in $mid]
+				, [$item]
+			[end]
+			[if($lst)]
+				and [$lst].
+			[end]
+			</p>			
             <hr/>
             [$thelist={"a","b","c","d","e"}]
             <ul>
