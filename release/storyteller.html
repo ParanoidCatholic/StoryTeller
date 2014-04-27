@@ -39,9 +39,8 @@ variables = [
                 <li>[if(currentPage() equal "localVariables")]<b>Local Variables</b>[else][link("localVariables")]Local Variables[end][end]</li>
                 <li>[if(currentPage() equal "conditional")]<b>Conditional Statements</b>[else][link("conditional")]Conditional Statements[end][end]</li>
                 <li>[if(currentPage() equal "randomness")]<b>Randomness</b>[else][link("randomness")]Randomness[end][end]</li>
-                <li>[if(currentPage() equal "lists")]<b>Lists</b>[else][link("lists")]Lists[end][end]</li>
+                <li>[if(currentPage() equal "lists")]<b>Lists</b>[else][link("lists")]Lists[end][end]</li><li>[if(currentPage() equal "loops")]<b>Loops</b>[else][link("loops")]Loops[end][end]</li>
                 <li>[if(currentPage() equal "listFunctions")]<b>List functions</b>[else][link("listFunctions")]List Functions[end][end]</li>
-                <li>[if(currentPage() equal "loops")]<b>Loops</b>[else][link("loops")]Loops[end][end]</li>
 				<li>[if(currentPage() equal "sets")]<b>Sets</b>[else][link("sets")]Sets[end][end]</li>
 				<li>[if(currentPage() equal "lookup")]<b>Sets As Lookup Tables</b>[else][link("lookup")]Sets As Lookup Tables[end][end]</li>
                 <li>[if(currentPage() equal "relations")]<b>Relations</b>[else][link("relations")]Relations[end][end]</li>
@@ -479,6 +478,7 @@ variables = [[
                 <li>$f = 9</li>
                 <li>$g will not be updated and will keep whatever value (if any) it had before.</li>
             </ul>
+            <p>When at least one of the values involves is a list, the '+' operator will join the lists. For example {1,2}+{3,4} gives {1,2,3,4}, {5,6}+7 gives {5,6,7} and 8+{9,10} gives {8,9,10}</p>
             <p>The projection operator ('@') can be used to extract individual items or sublists from a list. you use it like this: {list}@{index}. {list} is either a literal list or a local variable holding a list. {index} is either a single index or a list of indices, indicating which values to take from the list. Note: the first index in a list is 0.</p>
 			<p>Examples:</p>
 			<ul>
@@ -502,20 +502,53 @@ variables = [[
             <p>You can also use negative indices to indicate an offset from the end of the list. -1 indicates the last item, -2 indicates the second last and so on.</p>
             [include("contents")]
         </div>
-        <div id="listFunctions" class="page">
+        <div id="loops" class="page">
+            <h2>Loops</h2>
+            <p>A <b>foreach</b> statement is used to repeat part of a page once for each value in a list. It takes the form: [[foreach {variable} in {list}]]{body}[[end]]. {variable} is the name of a variable (usually a local variable). {list} is a list of values. {body} will be processed and the results displayed once for each member of {list}. Each time {body} is processed, {variable} will be set to the corresponding member.</p>
+            <p>Example:</p>
+            <pre>
+&ltul&gt
+[[foreach $n in {1,1,2,3,5}]]
+    &ltli&gt[[$n]]&lt/li&gt
+[[end]]
+&lt/ul&gt
+            </pre>
+            <p>Result:</p>
+            <ul>
+                [foreach $n in {1,1,2,3,5}]
+                    <li>[$n]</li>
+                [end]
+            </ul>
+            <p>{variable} can also be a list of variables.</p>
+<p>Example:</p>
+            <pre>
+[[foreach {$name, $greeting} in {{"James","Hi"},{"Ben","Hey"},{"David", "Hello"}}]]
+    &ltp&gt[[$name]] says [[$greeting]]&lt/p&gt
+[[end]]
+            </pre>
+            <p>Result:</p>
+            [foreach {$name, $greeting} in {{"James","Hi"},{"Ben","Hey"},{"David", "Hello"}}]
+                <p>[$name] says [$greeting]</p>
+            [end]         
+            [include("contents")]
+        </div>
+                <div id="listFunctions" class="page">
             <h2>List Functions</h2>
             <p>StoryTeller has a few built-in functions for working with lists:</p>
             <ul>
                 <li><b>length({list})</b> returns the number of items in {list}.</li>
                 <li><b>none({list})</b> returns true if {list} contains no items.</li>
                 <li><b>any({list})</b> returns true if {list} contains at least one item.</li>
-                <li><b>first({list})</b> returns the first item in {list}.</li>
+                <li><b>concat({a},{b})</b> Concatenates lists {a} and {b}. If either {a}, {b} or both are not lists then they are turned into lists first. concat({1,2},3) gives {1,2,3}.</li>
+                <li><b>first({list})</b> returns the first item in {list} (this is the same as {list}@0).</li>
                 <li><b>exceptFirst({list})</b> returns the all items in {list} except the first.</li>
-                <li><b>last({list})</b> returns the last item in {list}.</li>
+                <li><b>last({list})</b> returns the last item in {list} (this is the same as {list}@-1).</li>
                 <li><b>exceptLast({list})</b> returns the all items in {list} except the last.</li>
 				<li><b>peel({list})</b> splits {list} into the first item, last item and a list containing all of the remaining items. (see below).</li>
 				<li><b>peelFirst({list})</b> splits {list} into the first item and a list containing all of the remaining items. (see below).</li>
 				<li><b>peelLast({list})</b> splits {list} into the first item and a list containing all of the remaining items. (see below).</li>
+                <li><b>index({list})</b> attaches the positive and negative index to each item in {list} (see below).</li>
+                <li><b>mark({list})</b> marks the first and last item in {list} so that they can be easily identified in a foreach loop (see below).</li>
             </ul>
             <p>In the following example $inventory is a list of object names:</p>
             <pre>
@@ -553,36 +586,37 @@ variables = [[
 [[end]]
 			</pre>
 			<p>Note: this example has been broken up onto multiple lines for readability. If copied as-is it will result in spaces appearing before each comma. To avoid this, remove the line breaks.</p>
-            [include("contents")]
-        </div>
-        <div id="loops" class="page">
-            <h2>Loops</h2>
-            <p>A <b>foreach</b> statement is used to repeat part of a page once for each value in a list. It takes the form: [[foreach {variable} in {list}]]{body}[[end]]. {variable} is the name of a variable (usually a local variable). {list} is a list of values. {body} will be processed and the results displayed once for each member of {list}. Each time {body} is processed, {variable} will be set to the corresponding member.</p>
-            <p>Example:</p>
+            <p><b>index and mark</b></p>
+            <p>index({list}) returns a list, in which each item in {list} is replaced by a list with three values: {Item, I, N}. Item is the original item, I is the index within {list} and N is the negative index.</p>
+            <p>For example, index({"A","B","C"}) gives the following list: (line breaks and indentation are just for readability)</p>
             <pre>
-&ltul&gt
-[[foreach $n in {1,1,2,3,5}]]
-    &ltli&gt[[$n]]&lt/li&gt
-[[end]]
-&lt/ul&gt
+{
+    {"A",0,-3},
+    {"B",1,-2},
+    {"C",2,-1}
+}
             </pre>
-            <p>Result:</p>
-            <ul>
-                [foreach $n in {1,1,2,3,5}]
-                    <li>[$n]</li>
-                [end]
-            </ul>
-            <p>{variable} can also be a list of variables.</p>
-<p>Example:</p>
+            <p>Similarly, mark({list}) returns a list in which each item is replaced by a list: {Item, IsFirst, IsLast}. Once again, Item is the original Item. IsFirst is a boolean value which is true for the first item and false for all other. IsLast is also a boolean value, true for the last and false for all other.</p>
+            <p>For example, mark({"A","B","C"}) gives the following list:</p>
             <pre>
-[[foreach {$name, $greeting} in {{"James","Hi"},{"Ben","Hey"},{"David", "Hello"}}]]
-    &ltp&gt[[$name]] says [[$greeting]]&lt/p&gt
+{
+    {"A",true,false},
+    {"B",false,false},
+    {"C",false,true}
+}
+            </pre>    
+            <p>Here is yet another way to display the contents of $inventory:</p>
+            <pre>
+You are 
+[[foreach {$item,$f,$l} in mark($inventory)]]    
+    [[if($f)]]carrying
+    [[else]][[if($l)]] and [[else]], [[end]][[end]]
+    [[$item]]
 [[end]]
+[[if(none($inventory))]]
+    not carrying anything
+[[end]].
             </pre>
-            <p>Result:</p>
-            [foreach {$name, $greeting} in {{"James","Hi"},{"Ben","Hey"},{"David", "Hello"}}]
-                <p>[$name] says [$greeting]</p>
-            [end]         
             [include("contents")]
         </div>
         <div id="sets" class="page">

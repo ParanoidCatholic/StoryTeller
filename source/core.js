@@ -95,6 +95,16 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         return list.length > 0;
     }
     
+    function concat(listA,listB) {
+        if(!(listA instanceof Array)) {
+            listA = [listA];
+        }
+        if(!(listB instanceof Array)) {
+            listB = [listB];
+        }
+        return listA.concat(listB);
+    }
+    
     function first(list) {
         if(list.length>0) {
             return list[0];
@@ -144,6 +154,26 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 			return [[],null];
 		}
 	}
+    
+    function index(list) {
+        var result = [];
+        var length = list.length;
+        for(var i=0;i<length;i++) {
+            result.push([list[i],i,i-length]);
+        }
+        return result;
+    }
+    
+    function mark(list) {
+        var result = [];
+        var max = list.length-1;
+        result.push([list[0],true,false]);
+        for(var i=1;i<max;i++) {
+            result.push([list[i],false,false]);
+        }
+        result.push([list[max],false,true]);
+        return result;
+    }
                       
     function makeLink(block, pageIdentifierExpression) {
         
@@ -216,12 +246,15 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         {name: "none", operation: none},
         {name: "any", operation: any},
         {name: "first", operation: first},
+        {name: "concat", operation: concat},
         {name: "exceptFirst", operation: exceptFirst},
         {name: "last", operation: last},
         {name: "exceptLast", operation: exceptLast},
 		{name: "peel", operation: peel},
 		{name: "peelFirst", operation: peelFirst},
 		{name: "peelLast", operation: peelLast},
+        {name: "index", operation: index},
+        {name: "mark", operation: mark},
 		{name: "link", operation: makeLink, blockFunction: true},
         {name: "reset", operation: resetLink, blockFunction: true}        
     ];

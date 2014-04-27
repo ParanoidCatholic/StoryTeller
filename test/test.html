@@ -92,6 +92,66 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 	</head>
 	<body>    
         <div class="page" id="start">
+            <ul>
+                [foreach $item in {"a","b","c","d","e"}+{"x","y","z"}]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in "a"+{"x","y","z"}]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in {"a","b","c","d","e"}+"x"]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in "abcdef"]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in concat({"a","b","c","d","e"},{"x","y","z"})]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in concat("a",{"x","y","z"})]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in concat({"a","b","c","d","e"},"x")]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach $item in concat("a","x")]
+                    <li>[$item]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach {$item,$i,$n} in index({"a","b","c","d","e"})]
+                    <li>[$item], [$i], [$n]</li>
+                [end]
+            </ul>
+            <hr/>
+            <ul>
+                [foreach {$item,$fst,$lst} in mark({"a","b","c","d","e"})]
+                    <li>[$item], [$fst], [$lst]</li>
+                [end]
+            </ul>
+            <hr/>
 			[$list={1,2,3,4,5,6,7,8,9,10}]
 			[$emptyList={}]
 			[$shortList={1,2}]
@@ -139,7 +199,18 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 			[if($lst)]
 				and [$lst].
 			[end]
-			</p>			
+			</p>	            
+            <hr/><p>
+            You are 
+[foreach {$item,$f,$l} in mark($inventory)]   
+    [if($f)]carrying
+    [else][if($l)] and [else], [end][end]
+    [$item]
+[end]
+[if(none($inventory))]
+    not carrying anything
+[end].
+</p>	            
             <hr/>
             [$thelist={"a","b","c","d","e"}]
             <ul>

@@ -120,18 +120,8 @@ function Compiler(variables, functions) {
         var values = valuesExpression.evaluate();        
         var resultBuilder = new StringBuilder();
                 
-        if(values.hasNext && values.next) {
-            while(values.hasNext()) {
-                elementExpression.assign(values.next());
-                resultBuilder.append(block.execute());
-            }
-        } else if(values instanceof Array) {
-            for(var i=0;i<values.length;i++) {
-                elementExpression.assign(values[i]);
-                resultBuilder.append(block.execute());
-            }
-        } else {
-            elementExpression.assign(value);
+        for(var i=0;i<values.length;i++) {
+            elementExpression.assign(values[i]);
             resultBuilder.append(block.execute());
         }
         
@@ -257,7 +247,22 @@ function Compiler(variables, functions) {
 
     function additionExpression(leftOperand,rightOperand) {
         return {
-            evaluate: function() {return visible(leftOperand.evaluate().value+rightOperand.evaluate().value);},        
+            evaluate: function() {
+                var left = leftOperand.evaluate().value;
+                var right = rightOperand.evaluate().value;
+                
+                if(left instanceof Array) {
+                    if(right instanceof Array) {
+                        return visible(left.concat(right));
+                    } else {
+                        return visible(left.concat([right]));
+                    }
+                } else if(right instanceof Array) {
+                    return visible([left].concat(right));
+                } else {
+                    return visible(left+right);
+                }
+            },        
             assign: invalidAssignment
         };
     }
