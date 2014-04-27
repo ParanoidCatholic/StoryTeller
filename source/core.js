@@ -15,44 +15,54 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 		index: {}
 	};
     
-    var _displayDivs = {};
+    var _viewports = {
+        contents: [],
+        index: {}
+    };
 		
-	var _elements = document.body.getElementsByTagName("*");
-	var _pageNumber = 0;
-		
+	var _elements = document.body.getElementsByTagName("div");
+		    
+    var _root = null;
+        
 	for(var i=0; i<_elements.length; i++) {
 				
 		var element = _elements[i];
-		                
-        if(element.className) {
-            var classes = element.className.split(' ');
-                                    
-            for(var j=0;j<classes.length;j++) {
-                switch(element.className) {
-                    case "display":
-                        var id = element.id || "main";
-                        if(_displayDivs[id]) {
-                            throw new Error(stringFormat("Duplicate display ID: {0}", [element.id]));
-                        }
-                        _displayDivs[id]=element;
-                        break;
-                    case "page":			
-                        if(_pages.index[element.id]) {
-                            throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
-                        }
-                                    
-                        _pages.contents[_pageNumber] = {name: element.id, body: element.innerHTML};
-                        _pages.index[element.id] = _pageNumber;
-                        _pageNumber++;
-                        break;
-                        }
-            }            
-        }	
+		var pageId = element.getAttribute("data-page-id");  
+        var viewportId = element.getAttribute("data-viewport-id");  
+        var viewportPage = element.getAttribute("data-viewport-page"); 
+        var viewportType = element.getAttribute("data-viewport-type"); 
+        
+        if(pageId) {
+            if(_pages.index[pageId]) {
+                throw new Error(stringFormat("Duplicate page ID: {0}", [pageId]));
+            }             
+            _pages.index[pageId] = _pages.contents.length;            
+            _pages.contents.push({name: pageId, body: element.innerHTML});
+        }
+        
+        if(viewportId) {            
+            if(viewportId=="main") {
+                if(_root) {
+                    throw new Error(stringFormat("Duplicate main viewport."));
+                }
+                if(viewportPage) {
+                    throw new Error("Main viewport cannot have a default page.");
+                }                
+                _root = _viewports["main"];
+            } else {            
+                if(_viewports.index[id]) {
+                    throw new Error(stringFormat("Duplicate viewport ID: {0}", [viewportId]));
+                }
+                if(!viewportPage) {
+                    throw new Error("Viewport '{0}' does not have a default page.", viewportId);
+                } 
+            }
+            _viewports.index[viewportId] = _viewports.contents.length;
+            _viewports.contents.push({name: element.id, element: element, defaultPage:viewportPage, dynamic: viewportType=="dynamic"});
+        }
 	}
-    
-    if(!_displayDivs["main"]) {
-        _displayDivs["main"] = document.body;
-    }
+            
+    _root = _root || document.body;
         
     var _startPage = 0;
     
@@ -76,10 +86,35 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         }
         return new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
     }
+    
+    function createStaticPageNumber(pageId) {
+        if(!(pageId in _pages.index)) {
+            throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+        }
+        var page = _pages.index[pageId];
+        return {
+            get: function() {
+                return page;
+            },
+            set: function() {
+                throw new Error("Cannot update page of a static viewport.");
+            }
+        }
+    }
 	
     var _pageId = createPageNumberVariable();
         
-    var _stateContents = [_pageId, random];
+    var _stateContents = [random, _pageId];
+    
+    for(var i=0;i<_viewports.contents.length;i++) {
+        var viewport = _viewports.contents[i];
+        if(viewport.dynamic) {
+            viewport.pageId = createPageNumberVariable(viewport.defaultPage);
+            _stateContents.push(viewport.pageId);
+        } else {
+            viewport.pageId = createStaticPageNumber(viewport.defaultPage);
+        }
+    }
     
     if(variables && variables.length) {            
         for(var i=0; i<variables.length; i++) {
@@ -356,27 +391,36 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     }
 		
     var _compiler = new Compiler(variables, functions);
-    	        
-    function showPage() {  
-        var page = _pages.contents[_pageId.get()];
+       
+    function showPage(target,pageId) {
+        var page = _pages.contents[pageId.get()];
         if(page && page.body) {             
             try {                
                 var compiled = _compiler.compile(page.body);
-                _displayDivs["main"].innerHTML = compiled.execute();
+                target.innerHTML = compiled.execute();
             } catch (error) {
                 console.log(stringFormat("Error in page '{0}'\n{1}",[page.name,error.message]));
-                _displayDivs["main"].innerHTML = '<span class="error">An error has occurred.</span>'
+                target.innerHTML = '<span class="error">An error has occurred.</span>'
             }
         } else {
             console.log(stringFormat("Error. Page number {0} does not exist.",[_pageId.get()]));
-            _displayDivs["main"].innerHTML = '<span class="error">An error has occurred.</span>'
+            target.innerHTML = '<span class="error">An error has occurred.</span>'
+        }
+    }
+       
+    function renderCurrent() {
+        showPage(_root,_pageId);
+        
+        for(var i=0;i<viewports.contents.length;i++) {
+            var viewport = _viewports.contents[i];
+            showPage(viewport.element, viewport.pageId);
         }
         
         window.scroll(0,0);
     }
     
-    var _state = new State(_stateContents, showPage);
-	showPage();
+    var _state = new State(_stateContents, renderCurrent);
+	renderCurrent();
 }
 
 window.onload = function() {
