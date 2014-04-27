@@ -9,13 +9,13 @@ var sets = [];
 var relations = [];
 
 function StoryTeller(variables, userFunctions, sets, relations) {
-	   
-    var _root = null;
-                    
+	                       
     var _pages = {
 		contents: [],
 		index: {}
 	};
+    
+    var _displayDivs = {};
 		
 	var _elements = document.body.getElementsByTagName("*");
 	var _pageNumber = 0;
@@ -23,30 +23,37 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 	for(var i=0; i<_elements.length; i++) {
 				
 		var element = _elements[i];
-		
-        switch(element.className) {
-            case "StoryTeller":
-                if(_root) {
-                    throw new Error("Multiple 'StoryTeller' Divs");
-                }
-                _root = element;
-                break;
-            case "page":			
-                if(_pages.index[element.id]) {
-                    throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
-                }
-                            
-                _pages.contents[_pageNumber] = {name: element.id, body: element.innerHTML};
-                _pages.index[element.id] = _pageNumber;
-                _pageNumber++;
-                break;                
-		}		
+		                
+        if(element.className) {
+            var classes = element.className.split(' ');
+                                    
+            for(var j=0;j<classes.length;j++) {
+                switch(element.className) {
+                    case "display":
+                        var id = element.id || "main";
+                        if(_displayDivs[id]) {
+                            throw new Error(stringFormat("Duplicate display ID: {0}", [element.id]));
+                        }
+                        _displayDivs[id]=element;
+                        break;
+                    case "page":			
+                        if(_pages.index[element.id]) {
+                            throw new Error(stringFormat("Duplicate page ID: {0}", [element.id]));
+                        }
+                                    
+                        _pages.contents[_pageNumber] = {name: element.id, body: element.innerHTML};
+                        _pages.index[element.id] = _pageNumber;
+                        _pageNumber++;
+                        break;
+                        }
+            }            
+        }	
 	}
     
-    if(!_root) {
-        _root = document.body;
+    if(!_displayDivs["main"]) {
+        _displayDivs["main"] = document.body;
     }
-    
+        
     var _startPage = 0;
     
     if(_pages.contents.length<1) {
@@ -355,14 +362,14 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         if(page && page.body) {             
             try {                
                 var compiled = _compiler.compile(page.body);
-                _root.innerHTML = compiled.execute();
+                _displayDivs["main"].innerHTML = compiled.execute();
             } catch (error) {
                 console.log(stringFormat("Error in page '{0}'\n{1}",[page.name,error.message]));
-                _root.innerHTML = '<span class="error">An error has occurred.</span>'
+                _displayDivs["main"].innerHTML = '<span class="error">An error has occurred.</span>'
             }
         } else {
             console.log(stringFormat("Error. Page number {0} does not exist.",[_pageId.get()]));
-            _root.innerHTML = '<span class="error">An error has occurred.</span>'
+            _displayDivs["main"].innerHTML = '<span class="error">An error has occurred.</span>'
         }
         
         window.scroll(0,0);
