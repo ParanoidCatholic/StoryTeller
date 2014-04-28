@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>StoryTeller Viewport Test</title>
+		<style>
+div[data-page-id] {	display: none;}
+.error {color: #FF0000;}
+
+#mainViewport {
+    border-style: solid;
+	border-width: 3px;
+	border-left-width: 10px;
+	border-right-width: 10px;
+	border-color: red;
+	float: left;
+}
+
+#secondaryViewport {
+    border-style: solid;
+    border-width: 3px;
+    border-left-width: 10px;
+    border-right-width: 10px;
+    border-color: blue;
+	float: left;
+}
+		</style> 
+		<script type="text/javascript"  src="../source/util.js"></script>
+        <script type="text/javascript"  src="../source/types.js"></script>
+		<script type="text/javascript"  src="../source/relations.js"></script>
+        <script type="text/javascript"  src="../source/random.js"></script>
+        <script type="text/javascript"  src="../source/base64.js"></script>
+        <script type="text/javascript"  src="../source/state.js"></script>
+		<script type="text/javascript"  src="../source/compiler.js"></script>
+		<script type="text/javascript"  src="../source/core.js"></script>
+	</head>
+	<body>
+		<div id="mainViewport" data-viewport-id="main">
+		</div>
+		<div id="secondaryViewport" data-viewport-id="secondary" data-viewport-page="secondaryPage">
+		</div>
+		<div data-page-id="start">
+			This is the start page			
+		</div>
+		<div data-page-id="page2">
+			This is the second page<br/>
+			[link()][viewport("secondary","secondaryPage2")]change secondary[end]	
+		</div>
+		<div data-page-id="secondaryPage">
+			This is the secondary page<br/>
+			[link("start")]to start[end]<br/>
+			[link("page2")]to page 2[end]
+		</div>
+		<div data-page-id="secondaryPage2">
+			This is the second secondary page
+		</div>
+	</body>
+</html>
+		

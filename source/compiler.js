@@ -77,6 +77,7 @@ function Compiler(variables, functions) {
                     if(line.source) {
                         throw new Error(stringFormat("Unable to execute statement '{0}':\n{1}", [line.source, error.message]));
                     }
+                    throw(error);
                 } 
             }
             return outputBuilder.getValue();

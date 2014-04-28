@@ -48,17 +48,17 @@ function StoryTeller(variables, userFunctions, sets, relations) {
                 if(viewportPage) {
                     throw new Error("Main viewport cannot have a default page.");
                 }                
-                _root = _viewports["main"];
+                _root = element;
             } else {            
-                if(_viewports.index[id]) {
+                if(_viewports.index[viewportId]) {
                     throw new Error(stringFormat("Duplicate viewport ID: {0}", [viewportId]));
                 }
                 if(!viewportPage) {
                     throw new Error("Viewport '{0}' does not have a default page.", viewportId);
                 } 
+				_viewports.index[viewportId] = _viewports.contents.length;
+				_viewports.contents.push({name: viewportId, element: element, defaultPage: viewportPage, dynamic: viewportType!="static"});		
             }
-            _viewports.index[viewportId] = _viewports.contents.length;
-            _viewports.contents.push({name: element.id, element: element, defaultPage:viewportPage, dynamic: viewportType=="dynamic"});
         }
 	}
             
@@ -78,18 +78,18 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         var page;        
         if(pageId) {
             if(!(pageId in _pages.index)) {
-                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+                throw new Error(stringFormat("Page not found: {0}", [pageId]));
             }
             page = _pages.index[pageId];
         } else {
             page = _startPage;
         }
-        return new IntegerVariable(0, _pages.contents.length-1, _startPage, false);
+        return new IntegerVariable(0, _pages.contents.length-1, page, false);
     }
     
     function createStaticPageNumber(pageId) {
         if(!(pageId in _pages.index)) {
-            throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+            throw new Error(stringFormat("Page not found: {0}", [pageId]));
         }
         var page = _pages.index[pageId];
         return {
@@ -216,21 +216,40 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         result.push([list[max],false,true]);
         return result;
     }
-                      
-    function makeLink(block, pageIdentifierExpression) {
+    
+    function setViewport(viewportId, pageIdentifier) {
+    
+        if(!(viewportId in _viewports.index)) {
+			throw new Error(stringFormat("Viewport does not exist: {0}", [viewportId]));
+		}
         
-        var pageIdentifier = pageIdentifierExpression.evaluate();
-        
-        var backup = _state.toBase64();
+        var viewport = _viewports.contents[_viewports.index[viewportId]];
         
         if(typeof(pageIdentifier) == "number") {
-            _pageId.set(pageIdentifier);
-        } else {
-            if(!(pageIdentifier in _pages.index)) {
-                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
-            }
-            _pageId.set(_pages.index[pageIdentifier]);
-        }
+			viewport.pageId.set(pageIdentifier);
+		} else {
+			if(!(pageIdentifier in _pages.index)) {
+				throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+			}
+			viewport.pageId.set(_pages.index[pageIdentifier]);
+		}
+    }
+	
+    function makeLink(block, pageIdentifierExpression) {
+                        
+        var backup = _state.toBase64();
+        
+		if(pageIdentifierExpression) {
+			var pageIdentifier = pageIdentifierExpression.evaluate();
+			if(typeof(pageIdentifier) == "number") {
+				_pageId.set(pageIdentifier);
+			} else {
+				if(!(pageIdentifier in _pages.index)) {
+					throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+				}
+				_pageId.set(_pages.index[pageIdentifier]);
+			}
+		}
         
         var body = block.execute();
                 
@@ -297,6 +316,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 		{name: "peelLast", operation: peelLast},
         {name: "index", operation: index},
         {name: "mark", operation: mark},
+        {name: "viewport", operation: setViewport},
 		{name: "link", operation: makeLink, blockFunction: true},
         {name: "reset", operation: resetLink, blockFunction: true}        
     ];
@@ -411,7 +431,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     function renderCurrent() {
         showPage(_root,_pageId);
         
-        for(var i=0;i<viewports.contents.length;i++) {
+        for(var i=0;i<_viewports.contents.length;i++) {
             var viewport = _viewports.contents[i];
             showPage(viewport.element, viewport.pageId);
         }
