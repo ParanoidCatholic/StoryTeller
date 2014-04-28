@@ -54,15 +54,20 @@ function StoryTeller(variables, userFunctions, sets, relations) {
                     throw new Error(stringFormat("Duplicate viewport ID: {0}", [viewportId]));
                 }
                 if(!viewportPage) {
-                    throw new Error("Viewport '{0}' does not have a default page.", viewportId);
+                    throw new Error(stringFormat("Viewport '{0}' does not have a default page.", [viewportId]));
                 } 
 				_viewports.index[viewportId] = _viewports.contents.length;
-				_viewports.contents.push({name: viewportId, element: element, defaultPage: viewportPage, dynamic: viewportType!="static"});		
+				_viewports.contents.push({name: viewportId, element: element, defaultPage: viewportPage, dynamic: viewportType=="dynamic"});		
             }
         }
 	}
-            
-    _root = _root || document.body;
+    
+    if(!_root) {
+        if(_viewports.length>0) {
+            throw Error("Main viewport must be specified if any other viewports are.");
+        }
+        _root = document.body;
+    }
         
     var _startPage = 0;
     
@@ -217,7 +222,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         return result;
     }
     
-    function setViewport(viewportId, pageIdentifier) {
+    function viewportFunction(viewportId, pageIdentifier) {
     
         if(!(viewportId in _viewports.index)) {
 			throw new Error(stringFormat("Viewport does not exist: {0}", [viewportId]));
@@ -225,14 +230,18 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         
         var viewport = _viewports.contents[_viewports.index[viewportId]];
         
-        if(typeof(pageIdentifier) == "number") {
-			viewport.pageId.set(pageIdentifier);
-		} else {
-			if(!(pageIdentifier in _pages.index)) {
-				throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
-			}
-			viewport.pageId.set(_pages.index[pageIdentifier]);
-		}
+        if(pageIdentifier) {
+            if(typeof(pageIdentifier) == "number") {
+                viewport.pageId.set(pageIdentifier);
+            } else {
+                if(!(pageIdentifier in _pages.index)) {
+                    throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+                }
+                viewport.pageId.set(_pages.index[pageIdentifier]);
+            }
+        } else {        
+            return viewport.pageId.get();
+        }
     }
 	
     function makeLink(block, pageIdentifierExpression) {
@@ -316,7 +325,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 		{name: "peelLast", operation: peelLast},
         {name: "index", operation: index},
         {name: "mark", operation: mark},
-        {name: "viewport", operation: setViewport},
+        {name: "viewport", operation: viewportFunction},
 		{name: "link", operation: makeLink, blockFunction: true},
         {name: "reset", operation: resetLink, blockFunction: true}        
     ];
