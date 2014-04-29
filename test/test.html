@@ -91,7 +91,20 @@ sets = [
 relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 		</script>
 	</head>
-	<body>    
+	<body>   
+        <div data-config="variables">
+            boolVar: boolean(false);
+            numVar: number(3.14159);
+            intVar1: integer(0, 65536, 0, false);
+            intVar2: integer(-10, 10, 0, true);
+        </div>
+        <div data-config="sets">
+            people: ("surname","age") "Brian", "James", "Ben", "Declan", "David";
+            items: "rolling pin", "plank", "golf club", "kitana";
+        </div>
+        <div data-config="relations">
+            isHolding: people, items;
+        </div>
         <div data-page-id="start">
             <ul>
                 [foreach $item in {"a","b","c","d","e"}+{"x","y","z"}]
