@@ -99,8 +99,11 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
             intVar2: integer(-10, 10, 0, true);
         </div>
         <div data-config="sets">
-            people: ("surname","age") "Brian", "James", "Ben", "Declan", "David";
-            items: "rolling pin", "plank", "golf club", "kitana";
+            people: "Brian", "James", "Ben", "Declan", "David";
+            items: 
+            "lead pipe" (2,3),
+            "", 
+            });
         </div>
         <div data-config="relations">
             isHolding: people, items;
