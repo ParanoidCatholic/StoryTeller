@@ -92,20 +92,20 @@ relations = [ {name: "isHolding", relation: new Relation(people,items)} ];
 		</script>
 	</head>
 	<body>   
-        <div data-config="variables">
+        <div data-config-type="variables">
             boolVar: boolean(false);
             numVar: number(3.14159);
             intVar1: integer(0, 65536, 0, false);
             intVar2: integer(-10, 10, 0, true);
         </div>
-        <div data-config="sets">
+        <div data-config-type="sets">
             people: "Brian", "James", "Ben", "Declan", "David";
             items: 
             "lead pipe" (2,3),
             "", 
             });
         </div>
-        <div data-config="relations">
+        <div data-config-type="relations">
             isHolding: people, items;
         </div>
         <div data-page-id="start">

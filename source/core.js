@@ -10,20 +10,20 @@ var relations = [];
 
 function StoryTeller(variables, userFunctions, sets, relations) {
 	                       
-    var _pages = {
-		contents: [],
-		index: {}
-	};
+    var _pages = new LookupTable();
     
-    var _viewports = {
-        contents: [],
-        index: {}
-    };
+    var _viewports = new LookupTable();
 		
 	var _elements = document.body.getElementsByTagName("div");
 		    
     var _root = null;
-        
+    
+    var _config = {
+        variables: [],
+        sets: [],
+        relations: []
+    };
+    
 	for(var i=0; i<_elements.length; i++) {
 				
 		var element = _elements[i];
@@ -31,39 +31,46 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         var viewportId = element.getAttribute("data-viewport-id");  
         var viewportPage = element.getAttribute("data-viewport-page"); 
         var viewportType = element.getAttribute("data-viewport-type"); 
+        var configType = element.getAttribute("data-config-type"); 
         
         if(pageId) {
-            if(_pages.index[pageId]) {
-                throw new Error(stringFormat("Duplicate page ID: {0}", [pageId]));
+            if(_pages.contains(pageId)) {
+                throw new Error(stringFormat("Duplicate page ID: {0}", pageId));
             }             
-            _pages.index[pageId] = _pages.contents.length;            
-            _pages.contents.push({name: pageId, body: element.innerHTML});
+            _pages.add(pageId,element.innerHTML);
         }
         
         if(viewportId) {            
             if(viewportId=="main") {
                 if(_root) {
-                    throw new Error(stringFormat("Duplicate main viewport."));
+                    throw new Error("Duplicate main viewport.");
                 }
                 if(viewportPage) {
                     throw new Error("Main viewport cannot have a default page.");
                 }                
                 _root = element;
             } else {            
-                if(_viewports.index[viewportId]) {
-                    throw new Error(stringFormat("Duplicate viewport ID: {0}", [viewportId]));
+                if(_viewports.contains(viewportId)) {
+                    throw new Error(stringFormat("Duplicate viewport ID: {0}", viewportId));
                 }
                 if(!viewportPage) {
-                    throw new Error(stringFormat("Viewport '{0}' does not have a default page.", [viewportId]));
+                    throw new Error(stringFormat("Viewport '{0}' does not have a default page.", viewportId));
                 } 
-				_viewports.index[viewportId] = _viewports.contents.length;
-				_viewports.contents.push({name: viewportId, element: element, defaultPage: viewportPage, dynamic: viewportType=="dynamic"});		
+				_viewports.add(viewportId, {element: element, defaultPage: viewportPage, dynamic: viewportType=="dynamic"});		
+            }
+        }
+        
+        if(configType) {
+            if(configType in _config) {
+                _config[configType].push(element);
+            } else {
+                throw new Error(stringFormat("Config type '{0}' not recognised.", configType));
             }
         }
 	}
     
     if(!_root) {
-        if(_viewports.length>0) {
+        if(_viewports.size()>0) {
             throw Error("Main viewport must be specified if any other viewports are.");
         }
         _root = document.body;
@@ -71,32 +78,32 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         
     var _startPage = 0;
     
-    if(_pages.contents.length<1) {
+    if(_pages.size()<1) {
         throw new Error("No pages found");
     }
     
-    if(_pages.index["start"]) {
-        _startPage = _pages.index["start"];
+    if(_pages.contains("start")) {
+        _startPage = _pages.getId("start");
     }
 	
     function createPageNumberVariable(pageId) {
         var page;        
         if(pageId) {
-            if(!(pageId in _pages.index)) {
-                throw new Error(stringFormat("Page not found: {0}", [pageId]));
+            if(!_pages.contains(pageId)) {
+                throw new Error(stringFormat("Page not found: {0}", pageId));
             }
-            page = _pages.index[pageId];
+            page = _pages.getId(pageId);
         } else {
             page = _startPage;
         }
-        return new IntegerVariable(0, _pages.contents.length-1, page, false);
+        return new IntegerVariable(0, _pages.size()-1, page, false);
     }
     
     function createStaticPageNumber(pageId) {
-        if(!(pageId in _pages.index)) {
-            throw new Error(stringFormat("Page not found: {0}", [pageId]));
+        if(!_pages.contains(pageId)) {
+            throw new Error(stringFormat("Page not found: {0}", pageId));
         }
-        var page = _pages.index[pageId];
+        var page = _pages.getId(pageId);
         return {
             get: function() {
                 return page;
@@ -111,8 +118,8 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         
     var _stateContents = [random, _pageId];
     
-    for(var i=0;i<_viewports.contents.length;i++) {
-        var viewport = _viewports.contents[i];
+    for(var i=0;i<_viewports.size();i++) {
+        var viewport = _viewports.getById(i);
         if(viewport.dynamic) {
             viewport.pageId = createPageNumberVariable(viewport.defaultPage);
             _stateContents.push(viewport.pageId);
@@ -224,20 +231,20 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     
     function viewportFunction(viewportId, pageIdentifier) {
     
-        if(!(viewportId in _viewports.index)) {
-			throw new Error(stringFormat("Viewport does not exist: {0}", [viewportId]));
+        if(!_viewports.contains(viewportId)) {
+			throw new Error(stringFormat("Viewport does not exist: {0}", viewportId));
 		}
         
-        var viewport = _viewports.contents[_viewports.index[viewportId]];
+        var viewport = _viewports.getByName(viewportId);
         
         if(pageIdentifier) {
             if(typeof(pageIdentifier) == "number") {
                 viewport.pageId.set(pageIdentifier);
             } else {
-                if(!(pageIdentifier in _pages.index)) {
-                    throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+                if(!_pages.contains(pageIdentifier)) {
+                    throw new Error(stringFormat("Page not found: {0}", pageIdentifier));
                 }
-                viewport.pageId.set(_pages.index[pageIdentifier]);
+                viewport.pageId.set(_pages.getId(pageIdentifier));
             }
         } else {        
             return viewport.pageId.get();
@@ -253,10 +260,10 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 			if(typeof(pageIdentifier) == "number") {
 				_pageId.set(pageIdentifier);
 			} else {
-				if(!(pageIdentifier in _pages.index)) {
-					throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+				if(!_pages.contains(pageIdentifier)) {
+					throw new Error(stringFormat("Page not found: {0}", pageIdentifier));
 				}
-				_pageId.set(_pages.index[pageIdentifier]);
+				_pageId.set(_pages.getId(pageIdentifier));
 			}
 		}
         
@@ -291,17 +298,17 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         if(typeof(pageIdentifier) == "number") {
             var pageId = pageIdentifier;
         } else {
-            if(!(pageIdentifier in _pages.index)) {
-                throw new Error(stringFormat("Page not found: {0}", [pageIdentifier]));
+            if(!_pages.contains(pageIdentifier)) {
+                throw new Error(stringFormat("Page not found: {0}", pageIdentifier));
             }
-            var pageId = _pages.index[pageIdentifier];
+            var pageId = _pages.getId(pageIdentifier);
         }
         
         try {
-            var compiled = _compiler.compile(_pages.contents[pageId].body);	
+            var compiled = _compiler.compile(_pages.getById(pageId));	
             return compiled.execute();
         } catch (error) {
-            throw new Error(stringFormat("Error in subpage '{0}'\n{1}",[pageIdentifier, error.message]));
+            throw new Error(stringFormat("Error in subpage '{0}'\n{1}",pageIdentifier, error.message));
         }
 	}
                        
@@ -309,7 +316,7 @@ function StoryTeller(variables, userFunctions, sets, relations) {
         {name: "randomInteger", operation: random.getInteger.bind(random)},
         {name: "randomNumber", operation: random.getNumber.bind(random)},
         {name: "randomBoolean", operation: random.getBoolean.bind(random)},
-        {name: "currentPage", operation: function() {return _pages.contents[_pageId.get()].name;}},
+        {name: "currentPage", operation: function() {return _pages.getName(_pageId.get());}},
         {name: "currentPageNumber", operation: function() {return _pageId.get();}},
 		{name: "include", operation: includePage},
         {name: "length", operation: length},
@@ -421,18 +428,20 @@ function StoryTeller(variables, userFunctions, sets, relations) {
 		
     var _compiler = new Compiler(variables, functions);
        
-    function showPage(target,pageId) {
-        var page = _pages.contents[pageId.get()];
-        if(page && page.body) {             
+    function showPage(target,pageId) {    
+        var pageIdValue = pageId.get();
+        var name = _pages.getName(pageIdValue)
+        var body = _pages.getById(pageIdValue);
+        if(body) {             
             try {                
-                var compiled = _compiler.compile(page.body);
+                var compiled = _compiler.compile(body);
                 target.innerHTML = compiled.execute();
             } catch (error) {
-                console.log(stringFormat("Error in page '{0}'\n{1}",[page.name,error.message]));
+                console.log(stringFormat("Error in page '{0}'\n{1}",name,error.message));
                 target.innerHTML = '<span class="error">An error has occurred.</span>'
             }
         } else {
-            console.log(stringFormat("Error. Page number {0} does not exist.",[_pageId.get()]));
+            console.log(stringFormat("Error. Page number {0} does not exist.",_pageId.get()));
             target.innerHTML = '<span class="error">An error has occurred.</span>'
         }
     }
@@ -440,8 +449,8 @@ function StoryTeller(variables, userFunctions, sets, relations) {
     function renderCurrent() {
         showPage(_root,_pageId);
         
-        for(var i=0;i<_viewports.contents.length;i++) {
-            var viewport = _viewports.contents[i];
+        for(var i=0;i<_viewports.size();i++) {
+            var viewport = _viewports.getById(i);
             showPage(viewport.element, viewport.pageId);
         }
         

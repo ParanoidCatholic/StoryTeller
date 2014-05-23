@@ -75,7 +75,7 @@ function Compiler(variables, functions) {
                     outputBuilder.append(line.execute());
                 } catch(error) {
                     if(line.source) {
-                        throw new Error(stringFormat("Unable to execute statement '{0}':\n{1}", [line.source, error.message]));
+                        throw new Error(stringFormat("Unable to execute statement '{0}':\n{1}", line.source, error.message));
                     }
                     throw(error);
                 } 
@@ -543,10 +543,10 @@ function Compiler(variables, functions) {
             var funcDef = functions[i];
             var name = funcDef.name;
             if(funcs[name]) {
-                throw Error(stringFormat("Duplicate function name '{0}'",[name]));
+                throw Error(stringFormat("Duplicate function name '{0}'",name));
             }
             if(!identifierRegex.test(name) || reserved[name]) {
-                throw Error(stringFormat("Illegal function name '{0}'",[name]));
+                throw Error(stringFormat("Illegal function name '{0}'",name));
             }
             if(funcDef.blockFunction) {
                 funcs[name] = {tokenType: TokenType.blockFunc, operation: funcDef.operation}
@@ -564,13 +564,13 @@ function Compiler(variables, functions) {
             var name = variable.name;
 			if(name) {
 				if(globals[name]) {
-					throw Error(stringFormat("Duplicate variable name '{0}'",[name]));
+					throw Error(stringFormat("Duplicate variable name '{0}'",name));
 				}
 				if(funcs[name]) {
-					throw Error(stringFormat("Variable name already used as function name '{0}'",[name]));
+					throw Error(stringFormat("Variable name already used as function name '{0}'",name));
 				}
 				if(!identifierRegex.test(name) || reserved[name]) {
-					throw Error(stringFormat("Illegal variable name '{0}'",[name]));
+					throw Error(stringFormat("Illegal variable name '{0}'",name));
 				}
 				globals[name] = {tokenType: TokenType.variable, value: variable.value};
 			}
@@ -796,7 +796,7 @@ function Compiler(variables, functions) {
                 }
             }
 
-            throw new Error(stringFormat("Unexpected token '{0}'", [tokenString]));    
+            throw new Error(stringFormat("Unexpected token '{0}'", tokenString));    
         }
         
         function generateExpression(tokenStrings, start, end) {
@@ -883,7 +883,7 @@ function Compiler(variables, functions) {
                         }					                  
                 }
             } catch(error) {
-                throw new Error(stringFormat("Unable to parse statement '{0}':\n{1}", [statement, error.message]));
+                throw new Error(stringFormat("Unable to parse statement '{0}':\n{1}", statement, error.message));
             }          
         }
         

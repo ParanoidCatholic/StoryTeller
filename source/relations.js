@@ -16,7 +16,7 @@ function Set() {
         if(item) {
             return item;
         }
-        throw new Error(stringFormat("Index not found '{0}'",[i]));
+        throw new Error(stringFormat("Index not found '{0}'",i));
     }
         
     function _getName(i) {
@@ -37,7 +37,7 @@ function Set() {
         if(i>=0) {
             return _index[name];
         }
-        throw new Error(stringFormat("Name not found '{0}'",[name]));
+        throw new Error(stringFormat("Name not found '{0}'",name));
     }
     
     function _get(name) {
@@ -50,7 +50,7 @@ function Set() {
         if(value) {
             return value;
         }
-        throw new Error(stringFormat("Key not found '{0}'",[key]));
+        throw new Error(stringFormat("Key not found '{0}'",key));
     }
     
     function _lookup(name, key) {
@@ -91,7 +91,7 @@ function Relation() {
     
     function _getIndex() {        
         if(arguments.length!=_sets.length) {
-            throw new Error(stringFormat("Wrong number of keys ({0}), expected ({1})",[arguments.length, _sets.length]));
+            throw new Error(stringFormat("Wrong number of keys ({0}), expected ({1})",arguments.length, _sets.length));
         }
         var index = 0;
         for(var i=0;i<_sets.length;i++) {
